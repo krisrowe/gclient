@@ -1,0 +1,18 @@
+{
+    "unit-test-api-key": "your-api-key-here",
+    "processedEmailLabel": "Test",
+    "logging": {
+        "file": {
+            "enabled": true,
+            "level": "debug",
+            "path": "debug.log"
+        },
+        "gcp": {
+            "enabled": false
+        },
+        "console": {
+            "enabled": false,
+            "level": "verbose"
+        }
+    }
+}

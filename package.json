@@ -1,6 +1,6 @@
 {
   "name": "@kdrowe/gclient",
-  "version": "1.0.2",
+  "version": "1.0.0",
   "description": "Simplifies access to popular Google APIs",
   "main": "index.js",
   "directories": {
@@ -9,14 +9,14 @@
   "dependencies": {
     "@google-cloud/local-auth": "^2.1.0",
     "@google-cloud/logging-winston": "^5.3.0",
-    "@kdrowe/common-utils": "^1.0.1",
     "config": "^3.3.9",
+    "dotenv": "^16.0.3",
     "googleapis": "^105.0.0",
     "mocha": "^10.2.0"
   },
   "devDependencies": {},
   "scripts": {
-    "test": "mocha"
+    "test": "DOTENV_CONFIG_PATH=secrets/test.env mocha -r dotenv/config --timeout 10000 --colors"
   },
   "author": "Kristopher D. Rowe",
   "license": "MIT",

@@ -92,7 +92,7 @@ class GmailManager {
     }
     var query;
     if (typeof queryParams === 'object') {
-      if (config.get('emailsAfter') && !queryParams.before && !queryParams.after) {
+      if (config.has('emailsAfter') && !queryParams.before && !queryParams.after) {
         queryParams.after = config.get('emailsAfter');
       }
       query = extendGmailQuery("", queryParams);
@@ -135,7 +135,7 @@ class GmailManager {
                 //e.body = e.body.slice(0, 15);
               }
             }
-            process(e).then(result => {
+            Promise.resolve(process(e)).then(result => {
               resolveMessage(e);
             }).catch(reason => {
               rejectMessage(reason);
