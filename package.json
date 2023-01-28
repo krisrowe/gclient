@@ -1,0 +1,31 @@
+{
+  "name": "@kdrowe/gclient",
+  "version": "1.0.2",
+  "description": "Simplifies access to popular Google APIs",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "@google-cloud/local-auth": "^2.1.0",
+    "@google-cloud/logging-winston": "^5.3.0",
+    "@kdrowe/common-utils": "^1.0.1",
+    "config": "^3.3.9",
+    "googleapis": "^105.0.0",
+    "mocha": "^10.2.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "Kristopher D. Rowe",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/krisrowe/gclient.git"
+  },
+  "bugs": {
+    "url": "https://github.com/krisrowe/gclient/issues"
+  },
+  "homepage": "https://github.com/krisrowe/gclient#readme"
+}
