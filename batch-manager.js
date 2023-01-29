@@ -29,6 +29,7 @@ function getBatchNames() {
  */
 async function runBatch(batch, settings, user) {
     const gmailManager = new email.GmailManager(user.auth);
+    var changes = { };
     const promises = [];
     const operationsCount = settings.operations ? settings.operations.length : 0;
     logger.log('verbose', `Running ${operationsCount} operations.`);
