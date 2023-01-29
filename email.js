@@ -14,8 +14,6 @@ class GmailManager {
     this._gmail = google.gmail({version: 'v1', auth: auth});
   }
 
-  /** 
-   * 
   async archiveEmail(emailId) {
     return await this.labelEmail(emailId, INBOX_LABEL_ID, true);
   }
