@@ -6,8 +6,8 @@ const setup = require('./setup.js'); // ensure global test setup is run
 const batchManager = require('../batch-manager.js');
 
 const possibleBatches = {
-    'basic-test': './batches/basic-test.js',
-    'email-test': './batches/email-test.js'
+    'basic-test': () => require('../batches/basic-test.js'),
+    'email-test': () => require('../batches/email-test.js')
 }
 
 describe ('config', function() {

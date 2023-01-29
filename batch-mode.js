@@ -26,8 +26,7 @@ function execute(possibleBatches) {
         logger.info('No batch name specified on the command line, so main module is in library mode.');
     } else if (possibleBatches.hasOwnProperty(batchName)) {
         logger.info(`Executing ${batchName} batch...`);
-        const batch = require(possibleBatches[batchName]);
-
+        const batch = possibleBatches[batchName]();
         if (!apiKey) {
             apiKey = process.env.API_KEY;
             if (!apiKey) {
