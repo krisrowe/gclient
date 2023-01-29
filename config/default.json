@@ -1,6 +1,7 @@
 {
     "unit-test-api-key": "your-api-key-here",
     "processedEmailLabel": "Test",
+    "users-provider": "./local-users",
     "logging": {
         "file": {
             "enabled": true,

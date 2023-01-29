@@ -1,7 +1,6 @@
 const assert = require('assert');
 const config = require('config');
 const auth = require('../auth.js');
-const users = require('../users.js');
 const process = require('process');
 const setup = require('./setup.js'); // ensure global test setup is run
 const batchManager = require('../batch-manager.js');
@@ -13,8 +12,7 @@ describe ('config', function() {
     });
 
     it('should be able to load unit test user spreadsheet id', function() {
-        const authManager = new auth.Manager(new users.LocalUserManager());
-        const user = authManager.getUnitTestUser();
+        const user = auth.getUnitTestUser();
         const spreadsheetId = user.spreadsheetId;
         assert.ok(/1[a-zA-Z0-9_-]{42}[AEIMQUYcgkosw048]/.test(spreadsheetId), 
             "No valid spreadsheet identifier configured. Found: " + spreadsheetId);
@@ -26,8 +24,7 @@ describe ('config', function() {
     });
 
     it('should run a batch successfully', function() {
-        const authManager = new auth.Manager(new users.LocalUserManager());
-        const user = authManager.getUnitTestUser();
+        const user = auth.getUnitTestUser();
         const dummy = require('../batches/dummy.js');
         const batch = new dummy.Batch(user);
         const settings = require('../batches/dummy.json');

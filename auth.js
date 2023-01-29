@@ -1,25 +1,33 @@
 const config  = require('config');
 const {google} = require('googleapis');
 
-class Manager {
-    constructor(userManager) {
-        this._userManager = userManager;
+/**
+ * Authenticates using an API key and returns the authenticated user details.
+ * @param {string} apiKey - The API key to authenticate.
+ * @returns {User}
+ * @throws {InvalidApiKeyError}
+ * @throws {Error} - If no users provider is configured.
+ */
+function authenticate(apiKey) {
+    if (!usersProvider) {
+        throw new Error('No users provider configured. Set the "users-provider" config property to the path of a module that exports a users provider.');
     }
-
-    authenticate(apiKey) {
-        const user = this._userManager.findByApiKey(apiKey);
-        if (!user) {
-            throw new InvalidApiKeyError();
-        }
-        const auth = google.auth.fromJSON(user["google-token"]);
-        return new User(user.spreadsheetId, auth);
+    const user = usersProvider.findByApiKey(apiKey);
+    if (!user) {
+        throw new InvalidApiKeyError();
     }
-
-    getUnitTestUser() {
-        const apiKey = config.get('unit-test-api-key');
-        return this.authenticate(apiKey);
-    }    
+    const auth = google.auth.fromJSON(user["google-token"]);
+    return new User(user.spreadsheetId, auth);
 }
+
+/**
+ * Gets the user to use for unit tests, using the config setting "unit-test-api-key".
+ * @returns {User}
+ */
+function getUnitTestUser() {
+    const apiKey = config.get('unit-test-api-key');
+    return this.authenticate(apiKey);
+}    
 
 class InvalidApiKeyError extends Error {
     constructor(message = 'Invalid API key') {
@@ -27,6 +35,9 @@ class InvalidApiKeyError extends Error {
     }
 }
 
+/**
+ * Represents an authenticated user.
+ */ 
 class User {
     /**
      * @param {string} spreadsheetId - The ID of the spreadsheet.
@@ -38,13 +49,33 @@ class User {
         this._auth = auth;
     }
 
+    /**
+     * Gets the ID of the spreadsheet to use as a data store for the user.
+     * @returns {string}
+     */
     get spreadsheetId() {
         return this._spreadsheetId;
     }
 
+    /**
+     * Gets the Google OAuth2 client for Google API requests.
+     * @returns {google.auth.OAuth2}
+     */   
     get auth() {
         return this._auth;
     } 
 }
 
-module.exports = {Manager, User, InvalidApiKeyError};
+const usersProviderModule = config.has('users-provider') ? config.get('users-provider') : null;
+var usersProvider = usersProviderModule ? require(usersProviderModule) : null;
+
+/**
+ * Sets the users provider used to authenticate users and retrieve their details by API key,
+ * overriding the users provider configured in the config file.
+ * @param {Object} provider - The users provider.
+ */
+function setUsersProvider(provider) {
+    usersProvider = provider;
+}
+
+module.exports = { authenticate, getUnitTestUser, User, InvalidApiKeyError, setUsersProvider };
