@@ -4,6 +4,7 @@ const auth = require('../auth.js');
 const users = require('../users.js');
 const process = require('process');
 const batchManager = require('../batch-manager.js');
+const setup = require('./setup.js'); // ensure global test setup is run
 
 describe ('config', function() {
 

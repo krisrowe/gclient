@@ -4,6 +4,9 @@ const logging = require('@kdrowe/common-utils/logging');
 const INBOX_LABEL_ID = "INBOX"; // must be all caps
 
 class GmailManager {
+  /**
+   * @param {google.auth.OAuth2} auth
+   */  
   constructor(auth) {
     this._labelsPromise = null;
     this._processedLabelPromise = null;
@@ -11,6 +14,8 @@ class GmailManager {
     this._gmail = google.gmail({version: 'v1', auth: auth});
   }
 
+  /** 
+   * 
   async archiveEmail(emailId) {
     return await this.labelEmail(emailId, INBOX_LABEL_ID, true);
   }

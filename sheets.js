@@ -1,5 +1,5 @@
 const {google} = require('googleapis');
-const logging = require('@kdrowe/common-utils/logging');
+const logger = require('./globals.js').logger;
 
 class RowNotFoundError extends Error {
   constructor(params) {
@@ -92,6 +92,7 @@ class Sheet {
     if (majorDimension) {
       options.majorDimension = majorDimension;
     }
+    logger.log('verbose', 'Reading data from spreadsheet ' + this.spreadsheetId +' in range "' + range + '".')
     try { 
       rawValues = await sheets.spreadsheets.values.get(options);
     } catch (ex) {
@@ -113,8 +114,8 @@ class Sheet {
   }
 
   async saveToSheetWithHeading(obj, keyColumnHeading) {
-      logging.log('verbose', 'Saving object to sheet ' + this.name + '.');
-      logging.log('debug', obj);
+      logger.log('verbose', 'Saving object to sheet ' + this.name + '.');
+      logger.log('debug', obj);
 
       const set = await this.getColumnsAndKeys(keyColumnHeading);
       const columnHeadings = set.headings;
@@ -136,7 +137,7 @@ class Sheet {
       const range = this.name + "!A" + row;
 
       if (row < 2) { // note that the first row with data is row 2
-        logging.log('verbose', 'Appending to sheet ' + this.name + ' as a new record with key ' + key + '.');
+        logger.log('verbose', 'Appending to sheet ' + this.name + ' as a new record with key ' + key + '.');
         row = keyValues.length + 2;
         return sheets.spreadsheets.values.append({
           spreadsheetId: this.spreadsheetId,
@@ -147,7 +148,7 @@ class Sheet {
 
       }
       else {
-        logging.log('verbose', 'Updating row ' + row + ' in sheet ' + this.name + ' with key ' + key + '.');
+        logger.log('verbose', 'Updating row ' + row + ' in sheet ' + this.name + ' with key ' + key + '.');
         return sheets.spreadsheets.values.update({
           spreadsheetId: this.spreadsheetId,
           range: this.name + "!A" + row,
