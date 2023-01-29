@@ -2,7 +2,7 @@ const email = require('./email.js');
 const config = require('config');
 const BATCHES_FOLDER = './batches/';
 const fs = require('fs');
-const logging = require('@kdrowe/common-utils/logging');
+const logger = require('./globals.js').logger;
 const { User } = require('./auth.js');
 
 const VALID_BATCH_NAME_FORMAT =  /^[0-9a-zA-Z\-]+$/;
@@ -34,7 +34,7 @@ async function runBatch(name, user) {
     if (!batchNames.includes(name)) {
         throw new Error('Specified batch module not found.');
     }
-    logging.log('info', `Running batch: ${name}`);
+    logger.log('info', `Running batch: ${name}`);
 
     var changes = { };
 
@@ -48,9 +48,9 @@ async function runBatch(name, user) {
 
     const promises = [];
     const operationsCount = settings.operations ? settings.operations.length : 0;
-    logging.log('verbose', `Running ${operationsCount} operations.`);
+    logger.log('verbose', `Running ${operationsCount} operations.`);
     settings.operations.forEach(op => {
-        logging.log('verbose', `Running operation: ${op.name}`)
+        logger.log('verbose', `Running operation: ${op.name}`)
         if (op.enabled) {
             const process = batch[op.process];
             const query = JSON.parse(JSON.stringify(op.query));
@@ -61,21 +61,21 @@ async function runBatch(name, user) {
                     changes[op.process] = result;
                     resolve(result);
                 }).catch(reason => {
-                    logging.log('error', 'Failure processing emails.');
-                    logging.log('error', reason);
+                    logger.log('error', 'Failure processing emails.');
+                    logger.log('error', reason);
                     reject(reason);
                 });  
             });
             promises.push(promise);
         }
         else {
-            logging.log('warn', 'Skipping disabled operation: ' + op.name);
+            logger.log('warn', 'Skipping disabled operation: ' + op.name);
         } 
     });
 
     return new Promise((resolve, reject) => {
         Promise.all(promises).then(result => {
-            logging.log('info', `${name} batch completed: ` + JSON.stringify(changes));
+            logger.log('info', `${name} batch completed: ` + JSON.stringify(changes));
             resolve(changes);
         }).catch(reason => {
             reject(reason);

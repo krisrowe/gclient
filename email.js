@@ -1,6 +1,6 @@
 const config = require('config');
 const {google} = require('googleapis');
-const logging = require('@kdrowe/common-utils/logging');
+const logger = require('./globals.js').logger;
 const INBOX_LABEL_ID = "INBOX"; // must be all caps
 
 class GmailManager {
@@ -35,7 +35,7 @@ class GmailManager {
                   messageListVisibility: "show"
                 }
             }).then(output => {
-              logging.log('info', 'New processed email label created with id: ' + output.data.id);
+              logger.log('info', 'New processed email label created with id: ' + output.data.id);
               resolve(output.data.id);
             });
           }
@@ -111,14 +111,14 @@ class GmailManager {
     if (maxResults > 0) {
       listParams.maxResults = maxResults;
     }
-    logging.log('verbose', 'Retrieving emails with query: ' + query);
+    logger.log('verbose', 'Retrieving emails with query: ' + query);
     const raw = await this._gmail.users.messages.list(listParams);  
       
     if (!(raw && raw.data && raw.data.messages && raw.data.messages.length > 0)) {
-      logging.log('verbose', 'No emails found for query: ' + query);
+      logger.log('verbose', 'No emails found for query: ' + query);
       return 0;
     }
-    logging.log('verbose', `${raw.data.messages.length} emails found for query: ${query}`);
+    logger.log('verbose', `${raw.data.messages.length} emails found for query: ${query}`);
   
     var promises = [];
     for (const element of raw.data.messages) {
