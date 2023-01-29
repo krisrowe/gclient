@@ -1,0 +1,9 @@
+{
+    "operations": [
+        {
+            "name": "Do Stuff",
+            "process": "doStuff",
+            "enabled": true
+        }
+    ]
+}

@@ -1,5 +1,4 @@
 const config = require("config");
-const Sheet = require("../sheets.js").Sheet;
 const email = require("../email.js");
 const core = require("../core.js")
 
@@ -7,13 +6,20 @@ class Batch {
   /**
    * @param {User} user - The user to run the batch for.
    */
-  constructor(user) {
+  constructor() {
+
+  }
+
+  initialize(user) {
     if (!user) {
       throw new Error("User is required to initialize batch.");
     }
     
     this.gmailManager = new email.GmailManager(user.auth);
-    const spreadsheetId = user.spreadsheetId;
+  }
+
+  get operations() {
+    return require("./email-test.json").operations;
   }
 
   async processEmails(queryParams, process, maxResults = 0) {
@@ -26,4 +32,4 @@ class Batch {
 
 }
 
-module.exports = { Batch };
+module.exports = new Batch();

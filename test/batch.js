@@ -5,6 +5,11 @@ const process = require('process');
 const setup = require('./setup.js'); // ensure global test setup is run
 const batchManager = require('../batch-manager.js');
 
+const possibleBatches = {
+    'basic-test': './batches/basic-test.js',
+    'email-test': './batches/email-test.js'
+}
+
 describe ('config', function() {
 
     it('should have an api-key defined for testing', function() {
@@ -18,27 +23,25 @@ describe ('config', function() {
             "No valid spreadsheet identifier configured. Found: " + spreadsheetId);
     });
 
-    it.skip('should have a test label for processed email', function() {
-
+    it('should have a test label for processed email', function() {
         assert.equal(config.get('processedEmailLabel'), 'Test');
     });
 
-    it('should run a batch successfully', function() {
-        const user = auth.getUnitTestUser();
-        const dummy = require('../batches/dummy.js');
-        const batch = new dummy.Batch(user);
-        const settings = require('../batches/dummy.json');
-        const result = batchManager.runBatch(batch, settings, user);
-        assert.ok(result);
+    it('should run a basic batch successfully', function() {
+        const originalCommandLine = process.argv;
+        process.argv = originalCommandLine.splice();
+        process.argv.push('--batch=basic-test');
+        require('../batch-mode.js').execute(possibleBatches);
+        process.argv = originalCommandLine;
     });
 
-    it.skip('should have console output disabled', function() {
-        const setting = config.get('logging.console.enabled');
-        assert.strictEqual(setting, false);
+
+    it('should run an email batch successfully', function() {
+        const originalCommandLine = process.argv;
+        process.argv = originalCommandLine.splice();
+        process.argv.push('--batch=email-test');
+        require('../batch-mode.js').execute(possibleBatches);
+        process.argv = originalCommandLine;
     });
 
-    it.skip('should have file output enabled', function() {
-        const setting = config.get('logging.file.enabled');
-        assert.strictEqual(setting, true);
-    });
 });
