@@ -59,7 +59,7 @@ async function runBatch(batch, settings, user) {
 
     return new Promise((resolve, reject) => {
         Promise.all(promises).then(result => {
-            logger.log('info', `${name} batch completed: ` + JSON.stringify(changes));
+            logger.log('info', `Batch completed: ` + JSON.stringify(changes));
             resolve(changes);
         }).catch(reason => {
             reject(reason);
