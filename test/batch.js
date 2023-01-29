@@ -3,8 +3,8 @@ const config = require('config');
 const auth = require('../auth.js');
 const users = require('../users.js');
 const process = require('process');
-const batchManager = require('../batch-manager.js');
 const setup = require('./setup.js'); // ensure global test setup is run
+const batchManager = require('../batch-manager.js');
 
 describe ('config', function() {
 
@@ -28,7 +28,10 @@ describe ('config', function() {
     it('should run a batch successfully', function() {
         const authManager = new auth.Manager(new users.LocalUserManager());
         const user = authManager.getUnitTestUser();
-        const result = batchManager.runBatch("dummy", user);
+        const dummy = require('../batches/dummy.js');
+        const batch = new dummy.Batch(user);
+        const settings = require('../batches/dummy.json');
+        const result = batchManager.runBatch(batch, settings, user);
         assert.ok(result);
     });
 

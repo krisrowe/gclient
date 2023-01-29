@@ -22,30 +22,13 @@ function getBatchNames() {
 
 /**
  * Runs the specified batch.
- * @param {string} name The name of the batch to run.
+ * @param {object} batch The batch to run
+ * @param {object} settings The settings to use for the batch
  * @param {User} user The user to run the batch as.
  * @returns {Promise} A promise that resolves to an object containing the number of changes made by each operation.
  */
-async function runBatch(name, user) {
-    const isValidNameFormat = VALID_BATCH_NAME_FORMAT.test(name);
-    if (!isValidNameFormat) {
-        throw new Error('Invalid batch name format.');
-    }
-    if (!batchNames.includes(name)) {
-        throw new Error('Specified batch module not found.');
-    }
-    logger.log('info', `Running batch: ${name}`);
-
-    var changes = { };
-
-    const modulePath = `./batches/${name}.js`;
-    const settingsPath = `./batches/${name}.json`;
-    var BatchType = require(modulePath);
-    const batch = new BatchType();
-    batch.initialize(user);
-    const settings = require(settingsPath);
+async function runBatch(batch, settings, user) {
     const gmailManager = new email.GmailManager(user.auth);
-
     const promises = [];
     const operationsCount = settings.operations ? settings.operations.length : 0;
     logger.log('verbose', `Running ${operationsCount} operations.`);
