@@ -23,7 +23,7 @@ class Sheet {
    * @param {google.auth.OAuth2} auth - The OAuth2 client to authorize the request.
    * @param {string} valueRenderOption - The value render option to use when reading values. Options: UNFORMATTED_VALUE, FORMATTED_VALUE, FORMULA
    */
-  constructor(spreadsheetId, name, auth, valueRenderOption = "UNFORMATTED_VALUE") {
+  constructor(spreadsheetId, name, auth, valueRenderOption = "FORMATTED_VALUE") {
     if (!spreadsheetId) {
       throw new Error("Spreadsheet ID is required.");
     }
