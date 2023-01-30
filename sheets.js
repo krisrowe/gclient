@@ -21,8 +21,9 @@ class Sheet {
    * @param {string} spreadsheetId - The ID of the spreadsheet.
    * @param {string} name - The name of the sheet.
    * @param {google.auth.OAuth2} auth - The OAuth2 client to authorize the request.
+   * @param {string} valueRenderOption - The value render option to use when reading values. Options: UNFORMATTED_VALUE, FORMATTED_VALUE, FORMULA
    */
-  constructor(spreadsheetId, name, auth) {
+  constructor(spreadsheetId, name, auth, valueRenderOption = "UNFORMATTED_VALUE") {
     if (!spreadsheetId) {
       throw new Error("Spreadsheet ID is required.");
     }
@@ -36,6 +37,7 @@ class Sheet {
     this._name = name;
     this._auth = auth;
     this._columnHeadings = null;
+    this._valueRenderOption = valueRenderOption;
   }
 
   get name() {
@@ -87,7 +89,8 @@ class Sheet {
     var rawValues;
     const options = { 
         spreadsheetId: this.spreadsheetId,
-        range:range
+        range:range,
+        valueRenderOption: this._valueRenderOption
     };
     if (majorDimension) {
       options.majorDimension = majorDimension;
