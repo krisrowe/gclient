@@ -6,15 +6,10 @@ class Batch {
   /**
    * @param {User} user - The user to run the batch for.
    */
-  constructor() {
-
-  }
-
-  initialize(user) {
+  constructor(user) {
     if (!user) {
       throw new Error("User is required to initialize batch.");
     }
-    
     this.gmailManager = new email.GmailManager(user.auth);
   }
 
@@ -32,4 +27,8 @@ class Batch {
 
 }
 
-module.exports = new Batch();
+function initialize(user) {
+  return new Batch(user);
+}
+
+module.exports = { initialize };

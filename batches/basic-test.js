@@ -19,4 +19,8 @@ class Batch {
 
 }
 
-module.exports = new Batch();
+function initialize(user) {
+  return new Batch();
+}
+
+module.exports = { initialize };

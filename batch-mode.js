@@ -26,7 +26,6 @@ function execute(possibleBatches) {
         logger.info('No batch name specified on the command line, so main module is in library mode.');
     } else if (possibleBatches.hasOwnProperty(batchName)) {
         logger.info(`Executing ${batchName} batch...`);
-        const batch = possibleBatches[batchName]();
         if (!apiKey) {
             apiKey = process.env.API_KEY;
             if (!apiKey) {
@@ -35,9 +34,7 @@ function execute(possibleBatches) {
             logger.log('info', 'Using API key from environment variable.');
         }
         const user = auth.authenticate(apiKey);
-        if (batch.intialize) {
-            batch.initialize(user);
-        }
+        const batch = possibleBatches[batchName]().initialize(user);
         batchManager.runBatch(batch, user).then(changes => {
             logger.log('info', batchName + ' batch complete: ' + JSON.stringify(changes));
         }).catch(reason => {
