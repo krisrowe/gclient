@@ -44,6 +44,10 @@ class Sheet {
     return this._name;
   }
 
+  /**
+   * Gets the column headings as a string array.
+   * @returns {Promise<string[]>} The column headings.
+   */
   async getColumnHeadings() {
     var result = this._columnHeadings;
     if (!result) {
@@ -68,6 +72,17 @@ class Sheet {
     return { headings: headings, keys: keys }; 
   }
 
+  /**
+   * Gets the values for a column by the column heading, excluding
+   * the column heading row.
+   * @param {string} columnHeading - The column heading to get values for.
+   * @returns {Promise<string[]>} The values for the column, excluding the column heading row.
+   */
+  async getValuesByColumnHeading(columnHeading) {
+    const headings = await this.getColumnHeadings();
+    const columnNumber = headings.indexOf(columnHeading) + 1;
+    return await this.getValuesInColumn(columnNumber, true);
+  }
 
   async getValuesInColumn(column, rowContainsHeadings) {
     var columnLetter;
