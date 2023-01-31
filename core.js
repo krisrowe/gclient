@@ -140,4 +140,4 @@ function extractAmountField(sourceText, fieldLabel, reverse) {
     }
 }
 
-module.exports = { mapProperties, reversePropertyMap, extractSingleValue, extractAmountField, extractFieldLineValue, getAmountFieldRegEx, findDateRange, singleDateExp };
+module.exports = { mapProperties, reversePropertyMap, extractSingleValue, extractAmountField, extractFieldLineValue, getAmountFieldRegEx, findDateRange, singleDateExp, sign };
