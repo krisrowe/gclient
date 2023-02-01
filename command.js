@@ -58,7 +58,12 @@ function getFlag(name) {
         flag = new Flag(name, true);
     } else if (arg.startsWith(`${name}=`)) {
       if (arg.length > `${name}=`.length) {
-        flag = new Flag(name, true, arg.substring(`${name}=`.length));
+        // Extract the value from the argument while removing
+        // the flag name and the assignment operator as well as
+        // double quotes around the value, if any.
+        const value = arg.substring(`${name}=`.length);
+        flag = new Flag(name, true, value.replace(/^"(.*)"$/, '$1'));
+        //flag = new Flag(name, true, arg.substring(`${name}=`.length));
       } else {
         flag = new Flag(name, true, "");
       }
