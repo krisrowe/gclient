@@ -17,7 +17,7 @@
   },
   "devDependencies": {},
   "scripts": {
-    "test": "DOTENV_CONFIG_PATH=secrets/test.env mocha -r dotenv/config --timeout 10000 --colors"
+    "test": "DOTENV_CONFIG_PATH=secrets/test.env mocha -r dotenv/config --timeout 30000 --colors"
   },
   "author": "Kristopher D. Rowe",
   "license": "MIT",

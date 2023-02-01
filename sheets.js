@@ -36,6 +36,7 @@ class Sheet {
     this.spreadsheetId = spreadsheetId;
     this._name = name;
     this._auth = auth;
+    this._api = google.sheets({version: 'v4', auth: auth});
     this._columnHeadings = null;
     this._valueRenderOption = valueRenderOption;
   }
@@ -94,8 +95,7 @@ class Sheet {
     const startingRow = rowContainsHeadings ? 2 : 1;
     const range = this.name + "!" + columnLetter + startingRow + ":" + columnLetter; 
     var result = await this.getValuesByRange(range, "COLUMNS");
-    result = result[0];
-    return result;
+    return result && result.length > 0 ? result[0] : [];
   }
 
   async getValuesByRange(range, majorDimension = null) {
@@ -131,6 +131,20 @@ class Sheet {
     return String.fromCharCode(code + (i - 1)); // 1 becomes A
   }
 
+  async updateSingleCell(keyColumnHeading, key, targetColumnHeading, newValue) {
+    const structure = await this.getColumnsAndKeys(keyColumnHeading);
+    const columnNumber = structure.headings.indexOf(targetColumnHeading) + 1;
+    if (columnNumber < 1) {
+      throw new Error(`Column heading '${targetColumnHeading}' not found.`);
+    }
+    const rowNumber = structure.keys.findIndex(k => (k + "") == (key + "")) + 2;
+    if (rowNumber < 2) {
+      throw new Error(`Key '${key}' not found.`);
+    }
+    const range = this.columnNumberToLetter(columnNumber) + rowNumber;
+    return this.updateRange(range, [[newValue]]);
+  }
+
   async saveToSheetWithHeading(obj, keyColumnHeading) {
       logger.log('verbose', 'Saving object to sheet ' + this.name + '.');
       logger.log('debug', obj);
@@ -149,7 +163,7 @@ class Sheet {
       // Determine if the record already exists in the sheet, so we can decide
       // if we are updating or appending a row.
       const key = obj[keyColumnHeading];
-      var row = keyValues.indexOf(key) + 2;
+      var row = keyValues.findIndex(k => (k + "") == (key + "")) + 2;
       const auth = this._auth;
       const sheets = google.sheets({version: 'v4', auth: auth});
       const range = this.name + "!A" + row;
@@ -166,14 +180,26 @@ class Sheet {
 
       }
       else {
-        logger.log('verbose', 'Updating row ' + row + ' in sheet ' + this.name + ' with key ' + key + '.');
-        return sheets.spreadsheets.values.update({
-          spreadsheetId: this.spreadsheetId,
-          range: this.name + "!A" + row,
-          valueInputOption: "USER_ENTERED",
-          requestBody: { majorDimension: "ROWS", values: [values] },
-        });
+        return this.updateRange("A" + row, [values]);
       }
+  }
+
+  /**
+   * Updates a range of cells in the sheet.
+   * @param {string} range - The range to update, in A1 notation, with no sheet name referenced.
+   * @param {Array.<Array.<string>>} values - The values to update, as an array of rows, each in turn being an array of strings for the column values.
+   * @example updateRange('A1:B2', [['a', 'b'], ['c', 'd']])
+   * @example updateRange('A1', [['a']])
+   * @return {Promise} a promise that resolves when the update is complete
+   */
+  async updateRange(range, values, majorDimension = "ROWS") {
+    logger.log('verbose', 'Updating range ' + range + ' in sheet ' + this.name + '.');
+    return this._api.spreadsheets.values.update({
+      spreadsheetId: this.spreadsheetId,
+      range: this.name + "!" + range,
+      valueInputOption: "USER_ENTERED",
+      requestBody: { majorDimension: majorDimension, values: values },
+    });
   }
 
   /**
