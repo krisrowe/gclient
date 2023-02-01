@@ -1,6 +1,6 @@
 {
   "name": "@kdrowe/gclient",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "description": "Simplifies access to popular Google APIs",
   "main": "index.js",
   "directories": {
