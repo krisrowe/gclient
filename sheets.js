@@ -92,10 +92,28 @@ class Sheet {
     } else {
       columnLetter = column;
     }
-    const startingRow = rowContainsHeadings ? 2 : 1;
-    const range = this.name + "!" + columnLetter + startingRow + ":" + columnLetter; 
+    const range = this.name + "!" + columnLetter + "1:" + columnLetter; 
     var result = await this.getValuesByRange(range, "COLUMNS");
-    return result && result.length > 0 ? result[0] : [];
+    if (result && result.length > 0) {
+      // Grab the first and only element in the columns array,
+      // which will be an array of row-based values.
+      result = result[0];
+      if (rowContainsHeadings) {
+        // If there are at least two rows, then skip the
+        // column heading row and return the rest.
+        if (result && result.length > 1) {
+          return result.slice(1);
+        } else {
+          return [];
+        }
+      }
+      // No column headings, so just return the result,
+      // if there is one.
+      return result && result.length > 0 ? result : [];
+    } else {
+      // No result, so return an empty array.
+      return [];
+    }
   }
 
   async getValuesByRange(range, majorDimension = null) {
@@ -145,7 +163,78 @@ class Sheet {
     return this.updateRange(range, [[newValue]]);
   }
 
+  /**
+   * Appends an array of objects to the sheet, each as a new row,
+   * mapping the object property names to the column headings.
+   * @param {Array} objects 
+   * @param {string} keyColumnHeading 
+   * @returns {Promise}
+   */
+  async appendObjects(objects, keyColumnHeading) {
+    if (!objects) {
+      throw new Error("No objects provided to append.");
+    }
+
+    const headings = await this.getColumnHeadings();
+
+    // Create an array of arrays, where each array is a row of values.
+    const rows = [];
+    objects.forEach(obj => {
+      const columns = [];
+      // Loop through each property of the object, and if the 
+      // property name matches a column heading, add the value
+      // to the columns array.
+      for (var property in obj) {
+        if (headings.indexOf(property) > -1) {
+          columns.push(obj[property]);
+        }
+      }
+      rows.push(columns);
+    });
+
+    return this._api.spreadsheets.values.append({
+      spreadsheetId: this.spreadsheetId,
+      range: this.name + "!A2",
+      valueInputOption: "USER_ENTERED",
+      requestBody: { majorDimension: "ROWS", values: rows },
+    });
+  }
+
+  /**
+   * Deletes all rows from the sheet, leaving the column headings intact.
+   * @returns {Promise}
+   */
+  async deleteAllDataRows() {
+      // Get the sheet information to get the sheet ID
+      const spreadsheet = await this._api.spreadsheets.get({ spreadsheetId: this.spreadsheetId});
+      const sheet = spreadsheet.data.sheets.find(s => s.properties.title === this._name);
+      if (!sheet) throw new Error(`Sheet with name "${sheetName}" not found.`);
+      const sheetId = sheet.properties.sheetId;
+    
+      // Delete all the rows in the sheet, excluding the first row with the column headings
+      return this._api.spreadsheets.batchUpdate({
+        spreadsheetId: this.spreadsheetId,
+        resource: {
+          requests: [
+            {
+              deleteDimension: {
+                range: {
+                  sheetId,
+                  dimension: 'ROWS',
+                  startIndex: 1,
+                  endIndex: 100000
+                }
+              }
+            }
+          ]
+        }
+      });
+  }
+
   async saveToSheetWithHeading(obj, keyColumnHeading) {
+    if (!obj) {
+      throw new Error("No object provided to save.");
+    }
       logger.log('verbose', 'Saving object to sheet ' + this.name + '.');
       logger.log('debug', obj);
 
@@ -183,6 +272,8 @@ class Sheet {
         return this.updateRange("A" + row, [values]);
       }
   }
+
+  
 
   /**
    * Updates a range of cells in the sheet.
