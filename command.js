@@ -72,4 +72,28 @@ function getFlag(name) {
   return flag;
 }
 
-module.exports = { getFlag };
+
+function getFilter() {
+  const filterFlag = getFlag('--filter');
+  if (!filterFlag.found) {
+      return null;
+  }
+  const filterParamArray = filterFlag.isValueSpecified ? filterFlag.value.split(',') : null;
+  const filter = { };
+  if (filterParamArray && filterParamArray.length > 0) {
+      filterParamArray.forEach((param) => {
+          const paramParts = param.split('=');
+          if (paramParts.length == 2) {
+              // Remove quotes from the value if they exist.
+              if (paramParts[1].startsWith('"') && paramParts[1].endsWith('"')) {
+                  paramParts[1] = paramParts[1].substring(1, paramParts[1].length - 1);
+              }
+              filter[paramParts[0]] = paramParts[1];
+          }
+      });
+  }
+  
+  return filter;
+}
+
+module.exports = { getFlag, getFilter };

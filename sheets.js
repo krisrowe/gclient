@@ -181,13 +181,8 @@ class Sheet {
     const rows = [];
     objects.forEach(obj => {
       const columns = [];
-      // Loop through each property of the object, and if the 
-      // property name matches a column heading, add the value
-      // to the columns array.
-      for (var property in obj) {
-        if (headings.indexOf(property) > -1) {
-          columns.push(obj[property]);
-        }
+      for (var columnHeading of headings) {
+        columns.push(obj[columnHeading]);
       }
       rows.push(columns);
     });

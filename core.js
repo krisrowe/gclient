@@ -168,4 +168,67 @@ function extractAmountField(sourceText, fieldLabel, reverse) {
     }
 }
 
-module.exports = { parseIsoDate, mapProperties, reversePropertyMap, extractSingleValue, extractAmountField, extractFieldLineValue, getAmountFieldRegEx, findDateRange, singleDateExp, sign };
+
+function parseBoolean(value) {
+  if (typeof value == "boolean") {
+      return value;
+  } else if (typeof value == "string") {
+      if (value.toLowerCase() == "true") {
+          return true;
+      } else if (value.toLowerCase() == "false") {
+          return false;
+      } else {
+          throw new Error(`Expected a boolean.`);
+      }
+  } else {
+      throw new Error(`Expected a boolean.`);
+  }
+}
+
+function parseDate(value) {
+  if (!value) {
+      return value;
+  } else {
+      if (value instanceof Date) {
+          return value;
+      } else if (typeof value == "string") {
+          if (isIsoDateString(value)) {
+              return core.parseIsoDate(value);
+          } else {
+              return new Date(value);
+          }
+      } else {
+          throw new Error(`Expected a date.`);
+      }
+  } 
+}
+
+function isIsoDateString(value) {
+  return value && typeof value == 'string' && value.match(/^\d{4}-\d{2}-\d{2}$/);
+}
+
+
+function renderJsonResult(obj) {
+  if (Array.isArray(obj)) {
+      const format = command.getFlag('--format');
+      if (format.found && format.value == 'csv') {
+          var output = "";
+          obj.forEach((item) => {
+              output += Object.values(item).join(',') + "\n";
+          });
+          return output;
+      } else if (format.found && format.value == 'count') {
+          return obj.length;
+      }
+      else {
+          return "[\n" + obj.map(e => '  ' + JSON.stringify(e)).join(',\n') + "\n]";
+      }
+  } else {
+      return JSON.stringify(obj, null, 2);
+  }
+}
+
+module.exports = { parseIsoDate, mapProperties, reversePropertyMap, 
+  extractSingleValue, extractAmountField, extractFieldLineValue, 
+  getAmountFieldRegEx, findDateRange, singleDateExp, sign,
+  renderJsonResult, parseBoolean, parseDate };
