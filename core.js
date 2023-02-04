@@ -1,3 +1,5 @@
+const command = require('./command.js');
+
 function isDate(s) {
     return (new Date(s) !== "Invalid Date") && !isNaN(new Date(s));
 }
