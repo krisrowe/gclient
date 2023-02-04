@@ -11,6 +11,9 @@ var user = auth.getUnitTestUser();
 var sheet = new Sheet(user.spreadsheetId, "Unit Testing", user.auth);
 var object1Description = Math.random().toString(36).substring(7);
 var object1Promise = null;
+var savedObject1Promise = null;
+var testDate = new Date(2020, 0, 1);
+console.log("Test date: " + testDate);
 
 after(async function() {
     await sheet.deleteAllDataRows();
@@ -33,18 +36,62 @@ describe ('sheets', async function() {
         assert.ok(found);
     });
 
+    // This is important because the Google Sheets API will persist
+    // a Date instance as a string in ISO format, rather than a date,
+    // which could cause a variety of issues, including the fact that
+    // you can see a very odd-looking value when you directly open the
+    // spreadsheet, and you can't properly sort by date when it appears
+    // in the same column as actual date values.
+    it('persists Date in local format', async function() {
+        const found = await getSavedObject1();
+        assert.equal(new Date(found["Date"]).getTime(), testDate.getTime());
+    });
+
     function saveObject1() {
         if (!object1Promise) {
-            object1Promise = sheet.saveToSheetWithHeading({ "ID" : 1, "Name": "Test", "Description": object1Description, "Updated": object1Description }, "ID");
+            object1Promise = new Promise((resolve, reject) => {
+                sheet.saveToSheetWithHeading(
+                { "ID" : 1, 
+                    "Name": "Test", 
+                    "Description": object1Description, 
+                    "Updated": object1Description,
+                    "Date": testDate 
+                }, "ID").then(result => {
+                    resolve(result);
+                }).catch(err => {
+                    reject(err);
+                });
+            });
         }
         return object1Promise;
     }
 
+    function getSavedObject1() {
+        if (!savedObject1Promise) {
+            savedObject1Promise = new Promise((resolve, reject) => {
+                saveObject1().then(saved => {
+                    sheet.getSheetValuesAsObjects().then(results => {
+                        const found = results.find(r => r["ID"] == 1);
+                        if (found) {
+                            resolve(found);
+                        } else {
+                            reject("Object not found.");
+                        } 
+                    }).catch(err => {
+                        reject(err);
+                    });
+                }).catch(err => {
+                    reject(err);
+                });
+            });
+        }
+        return savedObject1Promise;
+    }
+
     it('updates a single cell by row id', async function() {
         await saveObject1();
+        const results = await sheet.getSheetValuesAsObjects();
         // Generate a random description.
-        const description = Math.random().toString(36).substring(7);
-        await sheet.updateSingleCell("ID", 1, "Updated", description);
         /*
         const results = await sheet.getSheetValuesAsObjects();
         const found = results.find(r => r["Description"] === description);

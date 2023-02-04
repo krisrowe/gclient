@@ -241,7 +241,11 @@ class Sheet {
       // columns in the sheet, as expected by the Sheets API.
       var values = [];
       for (var columnHeading of columnHeadings) {
-        values.push(obj[columnHeading]);
+        var value = obj[columnHeading];
+        if (value instanceof Date) {
+          value = value.toLocaleDateString();
+        }
+        values.push(value);
       }
 
       // Determine if the record already exists in the sheet, so we can decide
