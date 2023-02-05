@@ -1,53 +1,5 @@
 const command = require('./command.js');
 
-function isDate(s) {
-    return (new Date(s) !== "Invalid Date") && !isNaN(new Date(s));
-}
-
-/**
- * Returns a new Date object with the time set to 00:00:00.000
- * @returns {Date} The date with the time set to 00:00:00.000
- */
-Date.prototype.getWithoutTime = function () {
-    return new Date(this.toDateString());
-}
-
-/**
- * Returns a string in the format YYYY-MM-DD
- * @returns {string} The date in the format YYYY-MM-DD
- */
-Date.prototype.toISOStringWithoutTime = function () {
-    return this.toISOString().split('T')[0];
-}
-
-Date.prototype.addDays = function(days) {
-    var date = new Date(this.valueOf());
-    date.setDate(date.getDate() + days);
-    return date;
-}
-
-/**
- * Compares only the date portion of the two date objects, ignoring the time.
- * @param {Date} otherDate The date to compare to.
- * @returns {boolean} true if the dates are equal without considering the time.
- */
-Date.prototype.dateEquals = function(otherDate) {
-    return this.getWithoutTime().getTime() == otherDate.getWithoutTime().getTime();
-}
-
-/**
- * Parses a date in the format YYYY-MM-DD and returns a Date object
- * that represents that date with the time set to 00:00:00.000 in the
- * local time zone.
- * @param {*} s 
- * @returns {Date} date with the time set to 00:00:00.000 in the local time zone.
- */
-function parseIsoDate(s) {
-  var pattern = /^(\d{4})-(\d{1,2})-(\d{1,2})$/;
-  var segments = s.match(pattern);
-  return new Date(segments[1], segments[2] - 1, segments[3]);
-}
-
 String.prototype.toProperCase = function () {
     return this.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
 };
@@ -187,29 +139,6 @@ function parseBoolean(value) {
   }
 }
 
-function parseDate(value) {
-  if (!value) {
-      return value;
-  } else {
-      if (value instanceof Date) {
-          return value;
-      } else if (typeof value == "string") {
-          if (isIsoDateString(value)) {
-              return core.parseIsoDate(value);
-          } else {
-              return new Date(value);
-          }
-      } else {
-          throw new Error(`Expected a date.`);
-      }
-  } 
-}
-
-function isIsoDateString(value) {
-  return value && typeof value == 'string' && value.match(/^\d{4}-\d{2}-\d{2}$/);
-}
-
-
 function renderJsonResult(obj) {
   if (Array.isArray(obj)) {
       const format = command.getFlag('--format');
@@ -230,7 +159,7 @@ function renderJsonResult(obj) {
   }
 }
 
-module.exports = { parseIsoDate, mapProperties, reversePropertyMap, 
+module.exports = { mapProperties, reversePropertyMap, 
   extractSingleValue, extractAmountField, extractFieldLineValue, 
   getAmountFieldRegEx, findDateRange, singleDateExp, sign,
-  renderJsonResult, parseBoolean, parseDate };
+  renderJsonResult, parseBoolean };

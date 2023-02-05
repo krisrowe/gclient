@@ -1,5 +1,6 @@
 const { User } = require('./auth');
 const { Sheet } = require('./sheets');
+const dates = require('./dates');
 
 /**
  * Provides access to the underlying data store, while
@@ -77,8 +78,8 @@ function mapOnLoadStandard(createCallback = null) {
             var camelCaseKey = key.replace(/(?:^\w|[A-Z]|\b\w)/g, function(letter, index) {
                 return index == 0 ? letter.toLowerCase() : letter.toUpperCase();
             }).replace(/\s+/g, '');
-            if (isDateString(val[key])) {
-                output[camelCaseKey] = new Date(val[key]);
+            if (dates.isDateString(val[key])) {
+                output[camelCaseKey] = dates.parseDateAsLocal(val[key]);
             } else {
                 output[camelCaseKey] = val[key];
             }
@@ -87,33 +88,4 @@ function mapOnLoadStandard(createCallback = null) {
     };
 }
 
-/**
- * Returns true if the specified value is a string that not
- * only CAN be parsed as Date instance, but clearly IS a date
- * in a standard, user-entered format, that includes a year, 
- * a month, and a day, such as "1/1/2019" or "2019-01-01", or
- * even an ISO string with time zone, such as "2019-01-01T00:00:00.000Z".
- * This is useful when reading data from a loosely typed data
- * source, such as a spreadsheet, and is employed by the 
- * mapOnLoadStandard function.
- * @param {string} d the string to test.
- * @returns {boolean} true if the string is a date string, false otherwise.
- */
-function isDateString(d) {
-    if (typeof d == 'string') {
-        // Check if the string is in any of these formats:
-        // 1) YYYY-MM-DD or YYYY/MM/DD
-        // 2) MM/DD/YYYY or MM-DD-YYYY
-        // 3) M/D/YYYY or M-D-YYYY)
-        if (d.match(/^\d{4}[-\/]\d{2}[-\/]\d{2}($|T)/) ||
-            d.match(/^\d{1,2}[-\/]\d{1,2}[-\/]\d{4}$/)) {
-            return !isNaN(Date.parse(d));
-        } else {
-            return false;
-        }
-    } else {
-        return false;
-    }
-}
-
-module.exports = { Provider, mapOnLoadStandard, isDateString };
+module.exports = { Provider, mapOnLoadStandard };
