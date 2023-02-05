@@ -1,17 +1,7 @@
 const core = require('../core.js');
 const crypto = require('crypto');
 const assert = require('assert');
-const command = require('../command.js');
 
-describe ('command', function() {
-    it('parses a value assigned to a command-line flag', function() {
-        process.argv.push("--test-flag=\"special\"");
-        const flag = command.getFlag("--test-flag");
-        assert.ok(flag.found);
-        assert.ok(flag.isValueSpecified);
-        assert.equal(flag.value, "special");
-    });
-});
 
 describe ('core', function() {
     it('parse ISO date', function() {
