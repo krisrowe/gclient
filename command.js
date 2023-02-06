@@ -5,7 +5,14 @@ const FLAG_PATTERN = /^-{1,2}[\w]+[^\s]*$/;
 /**
  * The list of flags that have been accessed by name.
  */
-const flagsAccessed = new Map();
+var flagsAccessed = new Map();
+/**
+ * The number of baseline command-line arguments to skip over
+ * automatically before reading or counting command-line args.
+ * Typically, this number is 2, thus skipping 'node index.js',
+ * for example. 
+ */
+var argumentsToSkip = 2;
 
 class InvalidFlagError extends Error {
     /**
@@ -47,7 +54,7 @@ function assertAllFlagsRead() {
  * @throws ArgumentCountError
  */
 function getNonFlagArguments(min = 0, max = Number.MAX_SAFE_INTEGER) {
-    const args = process.argv.filter(a => !a.match(FLAG_PATTERN));
+    const args = process.argv.slice(argumentsToSkip).filter(a => !a.match(FLAG_PATTERN));
     const count = args ? args.length : 0;
     if (count < min) {
         throw new ArgumentCountError("Fewer than expected command-line arguments.");
@@ -65,7 +72,7 @@ function getNonFlagArguments(min = 0, max = Number.MAX_SAFE_INTEGER) {
  * unless and until they are again accessed thereafter.
  */
 function resetFlagsRead() {
-    this.flagsAccessed = new Map();
+    flagsAccessed = new Map();
 }
 
 class Flag {
@@ -178,4 +185,9 @@ function getFlag(name) {
   return result;
 }
 
-module.exports = { getFlag, assertAllFlagsRead, getNonFlagArguments, resetFlagsRead, InvalidFlagError };
+function setArgumentsToSkip(count) {
+    argumentsToSkip = count;
+}
+
+module.exports = { getFlag, assertAllFlagsRead, getNonFlagArguments, 
+    resetFlagsRead, InvalidFlagError, setArgumentsToSkip };
