@@ -1,7 +1,7 @@
 const process = require('process');
 const assert = require('assert');
 
-const FLAG_PATTERN = /^-{1,2}[\w]+[^\s]*$/;
+const FLAG_PATTERN = /^-{1,2}[\w]+.*$/;
 /**
  * The list of flags that have been accessed by name.
  */

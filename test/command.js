@@ -8,7 +8,7 @@ describe ('command', function() {
     before(function () {
         argvOriginal = process.argv;
         const TEST_ARGS = ['node', 'index.js', 
-            'items', 'list', '--dry-run', '--overwrite=all',
+            'items', 'list', '--dry-run', '--overwrite=all things',
             '--filter=startDate=2022-01-01,endDate=2022-12-31']
         process.argv = TEST_ARGS;
     });
@@ -21,7 +21,7 @@ describe ('command', function() {
         const flag = command.getFlag("--overwrite");
         assert.ok(flag.found);
         assert.ok(flag.isValueSpecified);
-        assert.equal(flag.value, "all");
+        assert.equal(flag.value, "all things");
     });
 
     it('reports correct a command-line flag with no value', function() {
