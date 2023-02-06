@@ -8,8 +8,12 @@ const FLAG_PATTERN = /^-{1,2}[\w]+[^\s]*$/;
 const flagsAccessed = new Map();
 
 class InvalidFlagError extends Error {
-    constructor(flag) {
-        super(`Invalid flag: ${flag}`);
+    /**
+     * Creates a new error.
+     * @param {string} flagName 
+     */
+    constructor(flagName) {
+        super(`Invalid flag: ${flagName}`);
     }
 }
 
@@ -29,7 +33,7 @@ function assertAllFlagsRead() {
     process.argv.filter(a => a.match(FLAG_PATTERN)).forEach(flagString => {
         const flag = parseFlag(flagString);
         if (!flagsAccessed.has(flag.name)) {
-            throw new InvalidFlagError(flagName);
+            throw new InvalidFlagError(flag.name);
         }
     });  
 }
