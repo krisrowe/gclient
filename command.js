@@ -133,6 +133,8 @@ class Flag {
                       paramParts[1] = paramParts[1].substring(1, paramParts[1].length - 1);
                   }
                   filter[paramParts[0]] = paramParts[1];
+              } else {
+                filter[paramParts[0]] = null;
               }
           });
       }
