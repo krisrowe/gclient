@@ -1,5 +1,3 @@
-const command = require('./command.js');
-
 String.prototype.toProperCase = function () {
     return this.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
 };
@@ -139,27 +137,7 @@ function parseBoolean(value) {
   }
 }
 
-function renderJsonResult(obj) {
-  if (Array.isArray(obj)) {
-      const format = command.getFlag('--format');
-      if (format.found && format.value == 'csv') {
-          var output = "";
-          obj.forEach((item) => {
-              output += Object.values(item).join(',') + "\n";
-          });
-          return output;
-      } else if (format.found && format.value == 'count') {
-          return obj.length;
-      }
-      else {
-          return "[\n" + obj.map(e => '  ' + JSON.stringify(e)).join(',\n') + "\n]";
-      }
-  } else {
-      return JSON.stringify(obj, null, 2);
-  }
-}
-
 module.exports = { mapProperties, reversePropertyMap, 
   extractSingleValue, extractAmountField, extractFieldLineValue, 
   getAmountFieldRegEx, findDateRange, singleDateExp, sign,
-  renderJsonResult, parseBoolean };
+  parseBoolean };

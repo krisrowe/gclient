@@ -94,10 +94,10 @@ function parseDateAsLocal(value) {
   }
   
   /** 
-   * Returns true if the specified value is of type string and in the format YYYY-MM-DD,
-   * with no time component.
+   * Returns true if the specified value is of type string and 
+   * in one of these formats: YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS.sssZ  
    * @param {*} value the value to test. 
-   * @returns {boolean} true if the value is of type string and in the format YYYY-MM-DD, false otherwise.
+   * @returns {boolean} true if the value is of type string and in the ISO date or date/time format
    */
   function isIsoUtcDateString(value) {
     return value && typeof value == 'string' && value.match(/^\d{4}-\d{2}-\d{2}(T.*Z)?$/);

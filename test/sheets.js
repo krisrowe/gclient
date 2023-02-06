@@ -13,7 +13,6 @@ var object1Description = Math.random().toString(36).substring(7);
 var object1Promise = null;
 var savedObject1Promise = null;
 var testDate = new Date(2020, 0, 1);
-console.log("Test date: " + testDate);
 
 after(async function() {
     await sheet.deleteAllDataRows();

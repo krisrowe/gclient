@@ -1,7 +1,5 @@
-const core = require('../core.js');
 const crypto = require('crypto');
 const assert = require('assert');
-
 
 describe ('core', function() {
     it('sign', function() {
