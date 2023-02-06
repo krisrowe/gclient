@@ -1,0 +1,17 @@
+[
+  { "id": "1001", "date": "11/30/2021" },
+  { "id": "1002", "date": "11/30/2021" },
+  {
+    "id": "1003",
+    "date": "11/30/2021",
+    "customer": { "name": "John Doe", "address": "123 Main St" },
+    "payment": {
+      "type": "credit",
+      "card": { "onfile": true }
+    },
+    "items": [
+      { "sku": "1AXU45", "price": 9.99, "count": 1 },
+      { "sku": "1AXU46", "price": 5.99, "count": 2 }
+    ]
+  }
+]

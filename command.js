@@ -1,4 +1,68 @@
 const process = require('process');
+const assert = require('assert');
+
+const FLAG_PATTERN = /^-{1,2}[\w]+[^\s]*$/;
+/**
+ * The list of flags that have been accessed by name.
+ */
+const flagsAccessed = new Map();
+
+class InvalidFlagError extends Error {
+    constructor(flag) {
+        super(`Invalid flag: ${flag}`);
+    }
+}
+
+class ArgumentCountError extends Error {
+    constructor(message = "Wrong number of command-line arguments.") {
+        super(message);
+    }
+}
+
+/**
+ * Checks to see if all the command-line flags provided
+ * have been accessed, and if not, throws an error to
+ * highlight the ignored flag.
+ * @throws InvalidFlagError
+ */
+function assertAllFlagsRead() {
+    process.argv.filter(a => a.match(FLAG_PATTERN)).forEach(flagString => {
+        const flag = parseFlag(flagString);
+        if (!flagsAccessed.has(flag.name)) {
+            throw new InvalidFlagError(flagName);
+        }
+    });  
+}
+
+/**
+ * Gets a list of subcommands or other arguments that do
+ * not follow the pattern of a flag, or do not begin with
+ * a hyphen, and throws an error if the number of such
+ * arguments is outside the optionally specified threshold.
+ * @returns {string[]} the arguments  
+ * @throws ArgumentCountError
+ */
+function getNonFlagArguments(min = 0, max = Number.MAX_SAFE_INTEGER) {
+    const args = process.argv.filter(a => !a.match(FLAG_PATTERN));
+    const count = args ? args.length : 0;
+    if (count < min) {
+        throw new ArgumentCountError("Fewer than expected command-line arguments.");
+    }
+    if (count > max) {
+        throw new ArgumentCountError("More than expected command-line arguments.");
+    }
+    return args;
+}
+
+/**
+ * Resets the tracking of which command-line flags have
+ * been read. Useful, at a minimum, for unit testing purposes.
+ * After calling this method, no flags will be considered read
+ * unless and until they are again accessed thereafter.
+ */
+function resetFlagsRead() {
+    this.flagsAccessed = new Map();
+}
 
 class Flag {
     constructor(name, found, value = null) {
@@ -67,6 +131,28 @@ class Flag {
 }
 
 /**
+ * Parses a command-line argument as a flag.
+ * @param {string} arg 
+ * @returns {Flag}
+ */
+function parseFlag(arg) {
+    // Parse the argument to separate the part left of the first equal sign,
+    // if present, from the value to the right of the equal sign.
+    const indexOfEqualSign = arg.indexOf("=");
+    var name;
+    var value;
+    if (indexOfEqualSign < 0) {
+        name = arg;
+        value = null;
+    } else {
+        name = arg.substring(0, indexOfEqualSign);
+        value = arg.substring(indexOfEqualSign + 1) || "";
+        value = value.replace(/^"(.*)"$/, '$1');
+    }
+    return new Flag(name, true, value); 
+}
+
+/**
  * Checks the command-line arguments for a flag in the format
  * of --flag-name or --flag-name=value and always returns an
  * object that describes whether the flag was found and what
@@ -75,24 +161,17 @@ class Flag {
  * @returns {Flag} an object that describes the flag 
  */
 function getFlag(name) {
-  var flag = new Flag(name, false);
+  var result = new Flag(name, false);
   process.argv.forEach((arg, index) => {
-    if (arg === name) {
-        flag = new Flag(name, true);
-    } else if (arg.startsWith(`${name}=`)) {
-      if (arg.length > `${name}=`.length) {
-        // Extract the value from the argument while removing
-        // the flag name and the assignment operator as well as
-        // double quotes around the value, if any.
-        const value = arg.substring(`${name}=`.length);
-        flag = new Flag(name, true, value.replace(/^"(.*)"$/, '$1'));
-        //flag = new Flag(name, true, arg.substring(`${name}=`.length));
-      } else {
-        flag = new Flag(name, true, "");
-      }
+    const flag = parseFlag(arg);
+    if ((flag.name + "").toLowerCase() == (name + "").toLowerCase()) {
+        result = flag;
     }
   });
-  return flag;
+  if (result.found) {
+    flagsAccessed.set(name, result);
+  }
+  return result;
 }
 
-module.exports = { getFlag };
+module.exports = { getFlag, assertAllFlagsRead, getNonFlagArguments, resetFlagsRead, InvalidFlagError };
