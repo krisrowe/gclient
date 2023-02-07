@@ -33,7 +33,9 @@ function renderArray(output, indented, step, array, replacer = null, openInLine 
         if (attributes) {
             attributes += ",";
         }
-        attributes += ` "${key}": ${JSON.stringify(obj[key], replacer)}`;
+        if (obj[key] != null) {
+          attributes += ` "${key}": ${JSON.stringify(obj[key], replacer)}`;
+        }
       }
       output += "{" + attributes + " }";
     } else {
@@ -53,7 +55,7 @@ function renderArray(output, indented, step, array, replacer = null, openInLine 
             output += "\n" + " ".repeat(indented + step) + `"${key}": `;
             output = renderArray(output, indented + step, step, obj[key], replacer, true);
             }
-        } else {
+        } else if (obj[key] != null) {
             output += "\n" + " ".repeat(indented + step) + `"${key}": ` + JSON.stringify(obj[key], replacer);
         }
         if (i < Object.keys(obj).length - 1) {

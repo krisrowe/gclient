@@ -106,7 +106,7 @@ describe ('sheets', async function() {
             const randomID = Math.floor(Math.random() * 1000000);
             objects.push({ "ID": randomID, "Name": "Test", "Description": "Test " + randomID });
         }
-        await sheet.appendObjects(objects, "ID");
+        await sheet.appendObjects(objects);
         const results = await sheet.getSheetValuesAsObjects();
         objects.forEach(o => {
             const found = results.find(r => r["ID"] == o["ID"]);

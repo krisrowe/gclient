@@ -167,10 +167,9 @@ class Sheet {
    * Appends an array of objects to the sheet, each as a new row,
    * mapping the object property names to the column headings.
    * @param {Array} objects 
-   * @param {string} keyColumnHeading 
    * @returns {Promise}
    */
-  async appendObjects(objects, keyColumnHeading) {
+  async appendObjects(objects) {
     if (!objects) {
       throw new Error("No objects provided to append.");
     }

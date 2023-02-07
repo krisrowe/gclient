@@ -20,26 +20,6 @@ function reversePropertyMap(map) {
   return result;
 }
 
-function sign(message){   
-  // MD5 is a 128-bit hash, so we need to convert it to a 32-character hex string
-  // Compute a digest of the message using MD5.
-  var signature = require('crypto').createHash('md5').update(message).digest('hex');
-  
-  //var signature = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, 
-  //  message, Utilities.Charset.US_ASCII);
-  var signatureStr = '';
-    for (i = 0; i < signature.length; i++) {
-      var byte = signature[i];
-      if (byte < 0)
-        byte += 256;
-      var byteStr = byte.toString(16);
-      // Ensure we have 2 chars in our byte, pad with 0
-      if (byteStr.length == 1) byteStr = '0'+byteStr;
-      signatureStr += byteStr;
-    }   
-  return signatureStr;
-}
-
 const singleDateExp = "(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\s\\d+(?:,\\s(\\d+))";
 
 function findDateRange(sourceText) {
@@ -139,5 +119,5 @@ function parseBoolean(value) {
 
 module.exports = { mapProperties, reversePropertyMap, 
   extractSingleValue, extractAmountField, extractFieldLineValue, 
-  getAmountFieldRegEx, findDateRange, singleDateExp, sign,
+  getAmountFieldRegEx, findDateRange, singleDateExp,
   parseBoolean };
