@@ -6,6 +6,7 @@ function renderArray(output, indented, step, array, replacer = null, openInLine 
     }
     output += "[";
     array.forEach((item, index) => {
+      output += "\n";
       output = renderObject(output, indented + step, step, item, replacer);
       if (index < array.length - 1) {
         output += ",";
@@ -18,7 +19,7 @@ function renderArray(output, indented, step, array, replacer = null, openInLine 
   function renderObject(output, indented, step, obj, replacer = null, openInLine = false) {
     var linePerAttribute = false;
     for (var key in obj) {
-      if (typeof obj[key] == "object" && !(obj[key] instanceof Date)) {
+      if (obj[key] != null && typeof obj[key] == "object" && !(obj[key] instanceof Date)) {
         linePerAttribute = true;
         break;
       }
@@ -26,14 +27,14 @@ function renderArray(output, indented, step, array, replacer = null, openInLine 
   
     if (!linePerAttribute) {
       if(!openInLine) {
-        output += "\n" + " ".repeat(indented);
+        output += " ".repeat(indented);
       }
       var attributes = "";
       for (var key in obj) {
-        if (attributes) {
-            attributes += ",";
-        }
         if (obj[key] != null) {
+          if (attributes) {
+              attributes += ",";
+          }
           attributes += ` "${key}": ${JSON.stringify(obj[key], replacer)}`;
         }
       }
@@ -42,21 +43,23 @@ function renderArray(output, indented, step, array, replacer = null, openInLine 
         if (openInLine) {
             output += "{";
         } else {
-            output += "\n" + " ".repeat(indented) + "{";
+            output += " ".repeat(indented) + "{";
         }
         for (var i = 0; i < Object.keys(obj).length; i++) {
         var key = Object.keys(obj)[i];
-        if (typeof obj[key] == "object" && !(obj[key] instanceof Date)) {
-            if (!Array.isArray(obj[key])) {
-            output += "\n" + " ".repeat(indented + step) + `"${key}": `;
-            output = renderObject(output, indented + step, step, obj[key], replacer, true);
-            }
-            else {
-            output += "\n" + " ".repeat(indented + step) + `"${key}": `;
-            output = renderArray(output, indented + step, step, obj[key], replacer, true);
-            }
-        } else if (obj[key] != null) {
-            output += "\n" + " ".repeat(indented + step) + `"${key}": ` + JSON.stringify(obj[key], replacer);
+        if (obj[key] != null) {
+          if (typeof obj[key] == "object" && !(obj[key] instanceof Date)) {
+              if (!Array.isArray(obj[key])) {
+              output += "\n" + " ".repeat(indented + step) + `"${key}": `;
+              output = renderObject(output, indented + step, step, obj[key], replacer, true);
+              }
+              else {
+              output += "\n" + " ".repeat(indented + step) + `"${key}": `;
+              output = renderArray(output, indented + step, step, obj[key], replacer, true);
+              }
+          } else {
+              output += "\n" + " ".repeat(indented + step) + `"${key}": ` + JSON.stringify(obj[key], replacer);
+          }
         }
         if (i < Object.keys(obj).length - 1) {
             output += ",";
