@@ -12,7 +12,11 @@ class GmailManager {
     this._processedLabelPromise = null;
     this._auth = auth;
     this._gmail = google.gmail({version: 'v1', auth: auth});
-    this._markProcessed = false;
+    /**
+     * Whether to automatically label successfully processed emails.
+     * @type {boolean}
+     */
+    this.markProcessed = true;
   }
 
   async archiveEmail(emailId) {
@@ -89,13 +93,6 @@ class GmailManager {
     }
   }
   */
- 
-  get markProcessed() {
-    return this._markProcessed;
-  }
-  set markProcessed(value) {
-    this._markProcessed = value;
-  }
 
   async processEmails(queryParams, process, maxResults = 0) {
     if (!queryParams) {
