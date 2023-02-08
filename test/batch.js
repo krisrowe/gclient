@@ -10,7 +10,7 @@ const possibleBatches = {
     'email-test': () => require('../batches/email-test.js')
 }
 
-describe ('config', function() {
+describe ('batch', function() {
 
     it('should have an api-key defined for testing', function() {
         assert.ok(process.env.API_KEY);

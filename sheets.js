@@ -77,7 +77,7 @@ class Sheet {
    * Gets the values for a column by the column heading, excluding
    * the column heading row.
    * @param {string} columnHeading - The column heading to get values for.
-   * @returns {Promise<string[]>} The values for the column, excluding the column heading row.
+   * @returns {Promise<Array>} The values for the column, excluding the column heading row.
    */
   async getValuesByColumnHeading(columnHeading) {
     const headings = await this.getColumnHeadings();
@@ -116,6 +116,12 @@ class Sheet {
     }
   }
 
+  /**
+   * Gets the values from a specified range.
+   * @param {string} range 
+   * @param {string|null} majorDimension 
+   * @returns 
+   */
   async getValuesByRange(range, majorDimension = null) {
     const auth = this._auth;
     const sheets = google.sheets({version: 'v4', auth: auth});
@@ -294,7 +300,7 @@ class Sheet {
   /**
    * Gets all cell values in the sheet by row, then by column
    *
-   * @return {Promise<Array.<Array.<string>>>} array of rows, each in turn being an array of strings for the column values
+   * @return {Promise<Array<Array>|null|undefined>} array of rows, each in turn being an array of strings for the column values
    */
   async getAllValuesWithHeaders() {
     return this.getValuesByRange(this.name);
@@ -373,36 +379,6 @@ class Sheet {
       return dataObject != null ? dataObject[fieldName] : null;
   }
   
-  /*
-  getSheetValuesMinusHeadings(hydrate) {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
-    var items = [];
-    var values = sheet.getSheetValues(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn());
-    for (var i = 0; i < values.length; i++) {
-      var columns = values[i];
-      var obj = hydrate(columns);
-      items.push(obj);
-    }
-    return items;
-  }
-  */
-  
-}
-
-function joinRow(values) {
-  if (!values || values.length != 1) {
-    throw "Not a row";
-  }
-  var columns = values[0];
-  return columns.join("|");  
-}
-
-function signRow(values) {
-  if (!values || values.length != 1) {
-    throw "Not a row";
-  }
-  var columns = values[0];
-  return sign(columns.join("|"));
 }
 
 module.exports = { Sheet, RowNotFoundError }; 

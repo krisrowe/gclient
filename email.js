@@ -12,6 +12,7 @@ class GmailManager {
     this._processedLabelPromise = null;
     this._auth = auth;
     this._gmail = google.gmail({version: 'v1', auth: auth});
+    this._markProcessed = false;
   }
 
   async archiveEmail(emailId) {
@@ -88,6 +89,13 @@ class GmailManager {
     }
   }
   */
+ 
+  get markProcessed() {
+    return this._markProcessed;
+  }
+  set markProcessed(value) {
+    this._markProcessed = value;
+  }
 
   async processEmails(queryParams, process, maxResults = 0) {
     if (!queryParams) {
@@ -139,9 +147,20 @@ class GmailManager {
               }
             }
             Promise.resolve(process(e)).then(result => {
-              resolveMessage(e);
+              if (this.markProcessed) {
+                logger.debug("Marking email as processed: " + e.id);
+                this.labelEmail(e.id, config.get('processedEmailLabel')).then((labelResult) => {
+                  logger.debug("Email marked as processed: " + e.id);
+                  resolveMessage(e);
+                }).catch(err => {
+                  rejectMessage("Failed to label email as processed: " + err);
+                });
+              }
+              else {
+                resolveMessage(e);
+              }
             }).catch(reason => {
-              rejectMessage(reason);
+              rejectMessage("Failed to run specific process for email: " + reason);
             });
           }
         ).catch(err => {
