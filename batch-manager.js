@@ -36,6 +36,7 @@ async function runBatch(batch, user) {
             logger.log('warn', 'Skipping disabled operation: ' + op.name);
         } 
     };
+    return changes;
 }
 
 module.exports = { runBatch };
