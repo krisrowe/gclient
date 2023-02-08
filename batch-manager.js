@@ -11,7 +11,6 @@ const { User } = require('./auth.js');
  */
 async function runBatch(batch, user) {
     const gmailManager = new email.GmailManager(user.auth);
-    gmailManager.markProcessed = batch.markProcessed;
     var changes = { };
     const operations = batch.operations;
     const operationsCount = operations ? operations.length : 0;
