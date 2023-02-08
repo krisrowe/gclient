@@ -4,6 +4,7 @@ const auth = require('../auth.js');
 const process = require('process');
 const setup = require('./setup.js'); // ensure global test setup is run
 const batchManager = require('../batch-manager.js');
+const user = auth.getUnitTestUser();
 
 const possibleBatches = {
     'basic-test': () => require('../batches/basic-test.js'),
@@ -27,21 +28,15 @@ describe ('batch', function() {
         assert.equal(config.get('processedEmailLabel'), 'Test');
     });
 
-    it('should run a basic batch successfully', function() {
-        const originalCommandLine = process.argv;
-        process.argv = originalCommandLine.splice();
-        process.argv.push('--batch=basic-test');
-        require('../batch-mode.js').execute(possibleBatches);
-        process.argv = originalCommandLine;
+    it('should run a basic batch successfully', async function() {
+        const batch = require('../batches/basic-test').initialize(user);
+        await batchManager.runBatch(batch, user);
     });
 
 
-    it('should run an email batch successfully', function() {
-        const originalCommandLine = process.argv;
-        process.argv = originalCommandLine.splice();
-        process.argv.push('--batch=email-test');
-        require('../batch-mode.js').execute(possibleBatches);
-        process.argv = originalCommandLine;
+    it('should run an email batch successfully', async function() {
+        const batch = require('../batches/email-test').initialize(user);
+        await batchManager.runBatch(batch, user);
     });
 
 });

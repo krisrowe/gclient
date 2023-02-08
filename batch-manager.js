@@ -12,11 +12,12 @@ const { User } = require('./auth.js');
 async function runBatch(batch, user) {
     const gmailManager = new email.GmailManager(user.auth);
     var changes = { };
-    const promises = [];
     const operations = batch.operations;
     const operationsCount = operations ? operations.length : 0;
     logger.log('verbose', `Running ${operationsCount} operations.`);
-    operations.forEach(op => {
+    for (var i = 0; i < operationsCount; i++) {
+        const op = operations[i];
+        const promises = [];
         logger.log('verbose', `Running operation: ${op.name}`)
         if (op.enabled) {
             const process = batch[op.process];
@@ -25,43 +26,16 @@ async function runBatch(batch, user) {
                 const query = JSON.parse(JSON.stringify(op.query));
                 query.not = query.not || { };
                 query.not.label = config.get("processedEmailLabel");
-                promise = new Promise((resolve, reject) => {
-                    gmailManager.processEmails(query, process.bind(batch)).then(result => {
-                        changes[op.process] = result;
-                        resolve(result);
-                    }).catch(reason => {
-                        logger.log('error', 'Failure processing emails.');
-                        logger.log('error', reason);
-                        reject(reason);
-                    });  
-                });
+                changes[op.process] = await gmailManager.processEmails(
+                    query, process.bind(batch));  
             } else {
-                promise = new Promise((resolve, reject) => {
-                    Promise.resolve(process.bind(batch)()).then(result => {
-                        changes[op.process] = result;
-                        resolve(result);
-                    }).catch(reason => {
-                        logger.log('error', 'Failure running ' + op.name + '.');
-                        logger.log('error', reason);
-                        reject(reason);
-                    });
-                });
+                changes[op.process] = await process.bind(batch)();
             }
-            promises.push(promise);
         }
         else {
             logger.log('warn', 'Skipping disabled operation: ' + op.name);
         } 
-    });
-
-    return new Promise((resolve, reject) => {
-        Promise.all(promises).then(result => {
-            logger.log('info', `Batch completed: ` + JSON.stringify(changes));
-            resolve(changes);
-        }).catch(reason => {
-            reject(reason);
-        });
-    });
+    };
 }
 
 module.exports = { runBatch };
