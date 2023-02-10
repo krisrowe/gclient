@@ -42,7 +42,8 @@ async function authenticateToken(token) {
     const auth = google.auth.fromJSON(userData["google-token"]);
     const user = new User(userData.spreadsheetId, auth);
     user.email = payload.email;
-    user.name = payload.name;
+    user.name = payload.name + "";
+    user.apiKey = userData["api-key"];
     return user;
 }
 
@@ -102,7 +103,9 @@ class User {
     constructor(spreadsheetId, auth) {
         this._spreadsheetId = spreadsheetId;
         this._auth = auth;
-        this.email = null;
+        this.email = "";
+        this.name = "";
+        this.apiKey = "";
     }
 
     /**
