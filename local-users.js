@@ -16,6 +16,13 @@ class LocalUsersProvider {
     findByApiKey(apiKey) {
         return this.users.find(user => user["api-key"] == apiKey);
     }
+
+    findByEmail(email) {
+        if (!email) {
+            throw new Error('No email provided.');
+        }
+        return this.users.find(user => user.email == email);
+    }
 }
 
 const provider = new LocalUsersProvider();
