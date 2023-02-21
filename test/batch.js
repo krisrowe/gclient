@@ -6,11 +6,6 @@ const setup = require('./setup.js'); // ensure global test setup is run
 const batchManager = require('../batch-manager.js');
 const user = auth.getUnitTestUser();
 
-const possibleBatches = {
-    'basic-test': () => require('../batches/basic-test.js'),
-    'email-test': () => require('../batches/email-test.js')
-}
-
 describe ('batch', function() {
 
     it('should have an api-key defined for testing', function() {
