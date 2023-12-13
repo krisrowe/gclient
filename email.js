@@ -134,7 +134,9 @@ class GmailManager {
             var e = new Email();
             e.id = element.id;
             //console.log("date " + getResponse.data.internalDate + " - " + new Date(getResponse.data.internalDate))
-            e.date = new Date(resolvedMessage.data.internalDate);     
+            e.date = new Date();
+            e.date.setTime(resolvedMessage.data.internalDate);  
+            logger.debug(`Email date ${e.date} parsed from ${resolvedMessage.data.internalDate}.`);   
             e.subject = resolvedMessage.data.payload.headers.find(h => h.name == "Subject").value;
             if (resolvedMessage.data.payload.parts) {
               var plain = resolvedMessage.data.payload.parts.find(e => e.mimeType == "text/plain");
