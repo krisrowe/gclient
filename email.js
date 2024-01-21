@@ -133,41 +133,57 @@ class GmailManager {
         }).then((resolvedMessage) => {
             var e = new Email();
             e.id = element.id;
-            //console.log("date " + getResponse.data.internalDate + " - " + new Date(getResponse.data.internalDate))
             e.date = new Date();
             e.date.setTime(resolvedMessage.data.internalDate);  
-            logger.debug(`Email date ${e.date} parsed from ${resolvedMessage.data.internalDate}.`);   
-            e.subject = resolvedMessage.data.payload.headers.find(h => h.name == "Subject").value;
-            /*
-            if (resolvedMessage.data.payload.parts) {
-              var plain = resolvedMessage.data.payload.parts.find(e => e.mimeType == "text/plain");
-              if (plain) {
-                e.body = Buffer.from(plain.body.data, "base64").toString("utf8");
-                //e.body = e.body.slice(0, 15);
+            logger.debug(`Email date ${e.date} parsed from ${resolvedMessage.data.internalDate}.`);  
+            if (resolvedMessage.data.raw) {
+              e.body = Buffer.from(resolvedMessage.data.raw, "base64").toString("utf8");
+              console.log(e.body);
+            } else {
+              if (resolvedMessage.data && resolvedMessage.data.payload.headers) { 
+                e.subject = resolvedMessage.data.payload.headers.find(h => h.name == "Subject").value;
               }
-            }
-            */
-            if (resolvedMessage.data.payload.parts) {
-              let plainTextPart = resolvedMessage.data.payload.parts.find(
-                part => part.mimeType === "text/plain" && part.body.size > 0
-              );
-            
-              if (plainTextPart) {
-                e.body = Buffer.from(plainTextPart.body.data, "base64").toString("utf8");
-              } else {
-                let htmlPart = resolvedMessage.data.payload.parts.find(part => part.mimeType === "text/html");
-            
-                if (htmlPart) {
-                  // Decode base64 HTML body:
-                  const decodedHtmlBody = Buffer.from(htmlPart.body.data, "base64").toString("utf8");
-                  e.body = decodedHtmlBody; // Store the decoded HTML directly
-                } else {
-                  // Handle cases where neither plain text nor HTML parts exist
-                  logger.warn("No suitable text part found in email.");
-                  e.body = "";
+              /*
+              if (resolvedMessage.data.payload.parts) {
+                var plain = resolvedMessage.data.payload.parts.find(e => e.mimeType == "text/plain");
+                if (plain) {
+                  e.body = Buffer.from(plain.body.data, "base64").toString("utf8");
+                  //e.body = e.body.slice(0, 15);
                 }
               }
-            }            
+              */
+              if (queryParams.part === "snippet") {
+                // Directly use the snippet attribute from the Gmail API
+                e.body = resolvedMessage.data.snippet;
+              } else if (resolvedMessage.data.payload.parts) {
+                let plainTextPart = resolvedMessage.data.payload.parts.find(
+                  part => part.mimeType === "text/plain" && part.body.size > 0
+                );
+              
+                if (plainTextPart) {
+                  e.body = Buffer.from(plainTextPart.body.data, "base64").toString("utf8");
+                } else {
+                  let htmlPart = resolvedMessage.data.payload.parts.find(part => part.mimeType === "text/html");
+              
+                  if (htmlPart) {
+                    // Decode base64 HTML body:
+                    const decodedHtmlBody = Buffer.from(htmlPart.body.data, "base64").toString("utf8");
+                    e.body = decodedHtmlBody; // Store the decoded HTML directly
+                  } else {
+                    // Handle cases where neither plain text nor HTML parts exist
+                    logger.warn("No suitable text part found in email.");
+                    e.body = "";
+                  }
+                }
+              } else if (resolvedMessage.data.payload.body && resolvedMessage.data.payload.body.size > 0) {
+                // Decode base64 body from payload.body:
+                e.body = Buffer.from(resolvedMessage.data.payload.body.data, "base64").toString("utf8");
+              } else {
+                // Handle case where no parts and no payload.body exist
+                logger.warn("No suitable text part or payload body found in email.");
+                e.body = "";
+              }  
+            }                  
             
             Promise.resolve(process(e)).then(result => {
               if (this.markProcessed) {
@@ -247,6 +263,9 @@ function extendGmailQuery(query, params, inverse) {
         break;
       case "any":
         q = appendGmailQueryParam(q, "", params[property], inverse);
+        break;
+      case "part":
+        // does not affect  query sent to API
         break;
       default:
         q = appendGmailQueryParam(q, property, params[property], inverse);
