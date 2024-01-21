@@ -138,6 +138,7 @@ class GmailManager {
             e.date.setTime(resolvedMessage.data.internalDate);  
             logger.debug(`Email date ${e.date} parsed from ${resolvedMessage.data.internalDate}.`);   
             e.subject = resolvedMessage.data.payload.headers.find(h => h.name == "Subject").value;
+            /*
             if (resolvedMessage.data.payload.parts) {
               var plain = resolvedMessage.data.payload.parts.find(e => e.mimeType == "text/plain");
               if (plain) {
@@ -145,6 +146,29 @@ class GmailManager {
                 //e.body = e.body.slice(0, 15);
               }
             }
+            */
+            if (resolvedMessage.data.payload.parts) {
+              let plainTextPart = resolvedMessage.data.payload.parts.find(
+                part => part.mimeType === "text/plain" && part.body.size > 0
+              );
+            
+              if (plainTextPart) {
+                e.body = Buffer.from(plainTextPart.body.data, "base64").toString("utf8");
+              } else {
+                let htmlPart = resolvedMessage.data.payload.parts.find(part => part.mimeType === "text/html");
+            
+                if (htmlPart) {
+                  // Decode base64 HTML body:
+                  const decodedHtmlBody = Buffer.from(htmlPart.body.data, "base64").toString("utf8");
+                  e.body = decodedHtmlBody; // Store the decoded HTML directly
+                } else {
+                  // Handle cases where neither plain text nor HTML parts exist
+                  logger.warn("No suitable text part found in email.");
+                  e.body = "";
+                }
+              }
+            }            
+            
             Promise.resolve(process(e)).then(result => {
               if (this.markProcessed) {
                 logger.debug("Marking email as processed: " + e.id);

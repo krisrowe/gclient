@@ -11,7 +11,7 @@ const {google} = require('googleapis');
 function getUserByApiKey(apiKey) {
     const usersProvider = getUsersProvider();
     if (!usersProvider) {
-        throw new Error('No users provider configured. Set the "users-provider" config property to the path of a module that exports a users provider.');
+        throw new Error('No users provider set.');
     }
     return usersProvider.getByApiKey(apiKey);
 }
@@ -107,12 +107,13 @@ class User {
 var usersProvider = null;
 function getUsersProvider() {
     if (!usersProvider) {
+        /*
         const usersProviderModule = config.has('users-provider') ? config.get('users-provider') : null;
         usersProvider = usersProviderModule ? require(usersProviderModule) : null;
+        */
     }
     return usersProvider;
 }
-
 
 /**
  * Sets the users provider used to authenticate users and retrieve their details by API key,
