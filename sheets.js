@@ -33,44 +33,27 @@ class Sheet {
     this.spreadsheetId = spreadsheetId;
     this._name = name;
     this._valueRenderOption = valueRenderOption;
-  
+
     let auth;
     if (credentials) {
       // Use provided OAuth2Client credentials
       auth = credentials;
     } else {
-      // Use service account key file
-
-      const fs = require('fs');
-      const path = require('path');
-      
-      const ENV_VAR_NAME = 'GOOGLE_APPLICATION_CREDENTIALS';
-      const RELATIVE_PATH = process.env[ENV_VAR_NAME];
-      if (!RELATIVE_PATH) {
-        throw "GOOGLE_APPLICATION_CREDENTIALS environment variable is required";
-      }
-      const jsonPath = path.join(process.cwd(), RELATIVE_PATH);
-      
-      var jsonContent;
-      try {
-        jsonContent = fs.readFileSync(jsonPath, 'utf8');
-      } catch (err) {
-        throw new Error(`${ENV_VAR_NAME} environment variable is required, or the JSON file does not exist or is invalid.`);
-      }
-      const serviceAccount = JSON.parse(jsonContent);
-
-      auth = new JWT(
-        serviceAccount.client_email,
-        null,
-        serviceAccount.private_key,
-        ['https://www.googleapis.com/auth/spreadsheets']
-      );
+      // Use ADC
+      const LOG_MSG = "Using ADC, which may leverage the GOOGLE_APPLICATION_CREDENTIALS environment variable, which is currently set to: " + process.env.GOOGLE_APPLICATION_CREDENTIALS;
+      log.debug(LOG_MSG);
+      auth = new GoogleAuth({
+        scopes: ['https://www.googleapis.com/auth/spreadsheets']
+      });
     }
-  
-    this._api = google.sheets({version: 'v4', auth});
-  }
-  
 
+    const initializeApi = async () => {
+      const client = await auth.getClient();
+      return google.sheets({version: 'v4', auth: client});
+    };
+
+    this._api = initializeApi();
+  }
 
   get name() {
     return this._name;
@@ -154,7 +137,7 @@ class Sheet {
    * @returns 
    */
   async getValuesByRange(range, majorDimension = null) {
-    const sheets = this._api;
+    const api = await this._api;
     var rawValues;
     const options = { 
         spreadsheetId: this.spreadsheetId,
@@ -166,7 +149,7 @@ class Sheet {
     }
     log.debug('Reading data from spreadsheet ' + this.spreadsheetId +' in range "' + range + '".')
     try { 
-      rawValues = await sheets.spreadsheets.values.get(options);
+      rawValues = await api.spreadsheets.values.get(options);
     } catch (ex) {
       if (ex.errors && ex.errors.length > 0 && ex.errors[0].reason == 'notFound'){
         throw new Error(`Spreadsheet id '${this.spreadsheetId}' not found per Sheets API.`);
@@ -222,7 +205,8 @@ class Sheet {
       rows.push(columns);
     });
 
-    return this._api.spreadsheets.values.append({
+    const api = await this._api;
+    return api.spreadsheets.values.append({
       spreadsheetId: this.spreadsheetId,
       range: this.name + "!A2",
       valueInputOption: "USER_ENTERED",
@@ -236,13 +220,14 @@ class Sheet {
    */
   async deleteAllDataRows() {
       // Get the sheet information to get the sheet ID
-      const spreadsheet = await this._api.spreadsheets.get({ spreadsheetId: this.spreadsheetId});
+      const api = await this._api;
+      const spreadsheet = await api.spreadsheets.get({ spreadsheetId: this.spreadsheetId});
       const sheet = spreadsheet.data.sheets.find(s => s.properties.title === this._name);
       if (!sheet) throw new Error(`Sheet with name "${sheetName}" not found.`);
       const sheetId = sheet.properties.sheetId;
     
       // Delete all the rows in the sheet, excluding the first row with the column headings
-      return this._api.spreadsheets.batchUpdate({
+      return api.spreadsheets.batchUpdate({
         spreadsheetId: this.spreadsheetId,
         resource: {
           requests: [
@@ -292,7 +277,8 @@ class Sheet {
       if (row < 2) { // note that the first row with data is row 2
         log.debug('Appending to sheet ' + this.name + ' as a new record with key ' + key + '.');
         row = keyValues.length + 2;
-        return this._api.spreadsheets.values.append({
+        const api = await this._api;
+        return api.spreadsheets.values.append({
           spreadsheetId: this.spreadsheetId,
           range: this.name + "!A" + row,
           valueInputOption: "USER_ENTERED",
@@ -317,7 +303,8 @@ class Sheet {
    */
   async updateRange(range, values, majorDimension = "ROWS") {
     log.debug('Updating range ' + range + ' in sheet ' + this.name + '.');
-    return this._api.spreadsheets.values.update({
+    const api = await this._api;
+    return api.spreadsheets.values.update({
       spreadsheetId: this.spreadsheetId,
       range: this.name + "!" + range,
       valueInputOption: "USER_ENTERED",
