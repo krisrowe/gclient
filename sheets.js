@@ -1,5 +1,6 @@
 const {google} = require('googleapis');
-const logger = require('./globals.js').logger;
+const { GoogleAuth, JWT,  } = require('google-auth-library');
+const log = require('./logger.js');
 
 class RowNotFoundError extends Error {
   constructor(params) {
@@ -16,30 +17,46 @@ class RowNotFoundError extends Error {
 }
 
 class Sheet {
-  
   /**
    * @param {string} spreadsheetId - The ID of the spreadsheet.
    * @param {string} name - The name of the sheet.
-   * @param {google.auth.OAuth2} auth - The OAuth2 client to authorize the request.
-   * @param {string} valueRenderOption - The value render option to use when reading values. Options: UNFORMATTED_VALUE, FORMATTED_VALUE, FORMULA
+   * @param {GoogleAuth|object|string|null} credentials - The OAuth2 client, service account key file path, or null for ADC.
+   * @param {string} valueRenderOption - The value render option to use when reading values.
    */
-  constructor(spreadsheetId, name, auth, valueRenderOption = "FORMATTED_VALUE") {
+  constructor(spreadsheetId, name, credentials = null, valueRenderOption = "FORMATTED_VALUE") {
     if (!spreadsheetId) {
       throw new Error("Spreadsheet ID is required.");
     }
     if (!name) {
       throw new Error("Sheet name is required.");
     }
-    if (!auth) {
-      throw new Error("Auth is required.");
-    }
     this.spreadsheetId = spreadsheetId;
     this._name = name;
-    this._auth = auth;
-    this._api = google.sheets({version: 'v4', auth: auth});
-    this._columnHeadings = null;
     this._valueRenderOption = valueRenderOption;
+  
+    let auth;
+    if (credentials) {
+      // Use provided OAuth2Client credentials
+      auth = credentials;
+    } else {
+      // Use service account key file
+      const ENV_VAR_NAME = 'GOOGLE_APPLICATION_CREDENTIALS';
+      if (!process.env[ENV_VAR_NAME]) {
+        throw new Error(`${ENV_VAR_NAME} environment variable is required.`);
+      }
+      const serviceAccount = require(process.env[ENV_VAR_NAME]);
+      auth = new JWT(
+        serviceAccount.client_email,
+        null,
+        serviceAccount.private_key,
+        ['https://www.googleapis.com/auth/spreadsheets']
+      );
+    }
+  
+    this._api = google.sheets({version: 'v4', auth});
   }
+  
+
 
   get name() {
     return this._name;
@@ -123,8 +140,7 @@ class Sheet {
    * @returns 
    */
   async getValuesByRange(range, majorDimension = null) {
-    const auth = this._auth;
-    const sheets = google.sheets({version: 'v4', auth: auth});
+    const sheets = this._api;
     var rawValues;
     const options = { 
         spreadsheetId: this.spreadsheetId,
@@ -134,7 +150,7 @@ class Sheet {
     if (majorDimension) {
       options.majorDimension = majorDimension;
     }
-    logger.log('verbose', 'Reading data from spreadsheet ' + this.spreadsheetId +' in range "' + range + '".')
+    log.debug('Reading data from spreadsheet ' + this.spreadsheetId +' in range "' + range + '".')
     try { 
       rawValues = await sheets.spreadsheets.values.get(options);
     } catch (ex) {
@@ -235,8 +251,8 @@ class Sheet {
     if (!obj) {
       throw new Error("No object provided to save.");
     }
-      logger.log('verbose', 'Saving object to sheet ' + this.name + '.');
-      logger.log('debug', obj);
+      log.debug('Saving object to sheet ' + this.name + '.');
+      log.debug(obj);
 
       const set = await this.getColumnsAndKeys(keyColumnHeading);
       const columnHeadings = set.headings;
@@ -257,14 +273,12 @@ class Sheet {
       // if we are updating or appending a row.
       const key = obj[keyColumnHeading];
       var row = keyValues.findIndex(k => (k + "") == (key + "")) + 2;
-      const auth = this._auth;
-      const sheets = google.sheets({version: 'v4', auth: auth});
       const range = this.name + "!A" + row;
 
       if (row < 2) { // note that the first row with data is row 2
-        logger.log('verbose', 'Appending to sheet ' + this.name + ' as a new record with key ' + key + '.');
+        log.debug('Appending to sheet ' + this.name + ' as a new record with key ' + key + '.');
         row = keyValues.length + 2;
-        return sheets.spreadsheets.values.append({
+        return this._api.spreadsheets.values.append({
           spreadsheetId: this.spreadsheetId,
           range: this.name + "!A" + row,
           valueInputOption: "USER_ENTERED",
@@ -288,7 +302,7 @@ class Sheet {
    * @return {Promise} a promise that resolves when the update is complete
    */
   async updateRange(range, values, majorDimension = "ROWS") {
-    logger.log('verbose', 'Updating range ' + range + ' in sheet ' + this.name + '.');
+    log.debug('Updating range ' + range + ' in sheet ' + this.name + '.');
     return this._api.spreadsheets.values.update({
       spreadsheetId: this.spreadsheetId,
       range: this.name + "!" + range,

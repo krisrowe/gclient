@@ -1,14 +1,9 @@
 const assert = require('assert');
-const config = require('config');
-const auth = require('../auth.js');
 const process = require('process');
-const batchManager = require('../batch-manager.js');
 const {Sheet} = require('../sheets.js');
-const setup = require('./setup.js'); // ensure global test setup is run
-const logger = require('../globals.js').logger;
+const log = require('../logger');
 
-var user = auth.getUnitTestUser();
-var sheet = new Sheet(user.spreadsheetId, "Unit Testing", user.auth);
+var sheet;
 var object1Description = Math.random().toString(36).substring(7);
 var object1Promise = null;
 var savedObject1Promise = null;
@@ -16,10 +11,19 @@ var testDate = new Date(2020, 0, 1);
 
 after(async function() {
     await sheet.deleteAllDataRows();
-    logger.debug("Deleted all data rows from Unit Testing sheet.");
+    log.debug("Deleted all data rows from Unit Testing sheet.");
 });
 
 describe ('sheets', async function() {
+    this.beforeAll(async function() {
+        assert.ok(process.env.SPREADSHEET_ID);
+        assert.ok(/1[a-zA-Z0-9_-]{42}[AEIMQUYcgkosw048]/.test(process.env.SPREADSHEET_ID), 
+            "No valid spreadsheet identifier configured. Found: " + process.env.SPREADSHEET_ID); 
+        sheet =  new Sheet(process.env.SPREADSHEET_ID, "Unit Testing");
+
+    });
+
+
     it('should be able to query', async function() {
         const results = await sheet.getAllValuesWithHeaders();
         assert.ok(results && results.length > 0);
@@ -99,8 +103,7 @@ describe ('sheets', async function() {
     });
 
     it('appends a set of rows', async function() {
-        const user = auth.getUnitTestUser();
-        var sheet = new Sheet(user.spreadsheetId, "Unit Testing", user.auth);
+        var sheet = new Sheet(process.env.SPREADSHEET_ID + "", "Unit Testing");
         const objects = [];
         for (let i = 0; i < 3; i++) {
             const randomID = Math.floor(Math.random() * 1000000);

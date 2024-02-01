@@ -1,11 +1,13 @@
-const config = require('config');
 const {google} = require('googleapis');
-const logger = require('./globals.js').logger;
+const {OAuth2Client} = require('google-auth-library');
+const log = require('./logger');
 const INBOX_LABEL_ID = "INBOX"; // must be all caps
+
+const LABEL_NAME = process.env.PROCESSED_EMAIL_LABEL;
 
 class GmailManager {
   /**
-   * @param {google.auth.OAuth2} auth
+   * @param {OAuth2Client} auth
    */  
   constructor(auth) {
     this._labelsPromise = null;
@@ -16,7 +18,7 @@ class GmailManager {
      * Whether to automatically label successfully processed emails.
      * @type {boolean}
      */
-    this.markProcessed = true;
+    this.markProcessed = true;    
   }
 
   async archiveEmail(emailId) {
@@ -27,18 +29,21 @@ class GmailManager {
     if (!this._processedLabelPromise) {
       this._processedLabelPromise = new Promise((resolve, reject) => {
         this.fetchLabels().then(labels => {
-          const obj = labels.find(l => l.name == config.get('processedEmailLabel'));
+          if (!LABEL_NAME) {
+            throw "No processed email label specified.";
+          }
+          const obj = labels.find(l => l.name == LABEL_NAME);
           const labelId = obj ? obj.id : "";
           if (!labelId) {
             this._gmail.users.labels.create({
                 userId: "me",
                 resource: {
-                  name: config.get('processedEmailLabel'),
+                  name: LABEL_NAME,
                   labelListVisibility: "labelShow",
                   messageListVisibility: "show"
                 }
             }).then(output => {
-              logger.log('info', 'New processed email label created with id: ' + output.data.id);
+              log.info('New processed email label created with id: ' + output.data.id);
               resolve(output.data.id);
             });
           }
@@ -100,9 +105,6 @@ class GmailManager {
     }
     var query;
     if (typeof queryParams === 'object') {
-      if (config.has('emailsAfter') && !queryParams.before && !queryParams.after) {
-        queryParams.after = config.get('emailsAfter');
-      }
       query = extendGmailQuery("", queryParams);
     } else{
       query = queryParams;
@@ -114,14 +116,14 @@ class GmailManager {
     if (maxResults > 0) {
       listParams.maxResults = maxResults;
     }
-    logger.log('verbose', 'Retrieving emails with query: ' + query);
+    log.debug('Retrieving emails with query: ' + query);
     const raw = await this._gmail.users.messages.list(listParams);  
       
     if (!(raw && raw.data && raw.data.messages && raw.data.messages.length > 0)) {
-      logger.log('verbose', 'No emails found for query: ' + query);
+      log.debug('No emails found for query: ' + query);
       return 0;
     }
-    logger.log('verbose', `${raw.data.messages.length} emails found for query: ${query}`);
+    log.debug(`${raw.data.messages.length} emails found for query: ${query}`);
   
     var promises = [];
     for (const element of raw.data.messages) {
@@ -135,7 +137,7 @@ class GmailManager {
             e.id = element.id;
             e.date = new Date();
             e.date.setTime(resolvedMessage.data.internalDate);  
-            logger.debug(`Email date ${e.date} parsed from ${resolvedMessage.data.internalDate}.`);  
+            log.debug(`Email date ${e.date} parsed from ${resolvedMessage.data.internalDate}.`);  
             if (resolvedMessage.data.raw) {
               e.body = Buffer.from(resolvedMessage.data.raw, "base64").toString("utf8");
               console.log(e.body);
@@ -171,7 +173,7 @@ class GmailManager {
                     e.body = decodedHtmlBody; // Store the decoded HTML directly
                   } else {
                     // Handle cases where neither plain text nor HTML parts exist
-                    logger.warn("No suitable text part found in email.");
+                    log.warn("No suitable text part found in email.");
                     e.body = "";
                   }
                 }
@@ -180,16 +182,19 @@ class GmailManager {
                 e.body = Buffer.from(resolvedMessage.data.payload.body.data, "base64").toString("utf8");
               } else {
                 // Handle case where no parts and no payload.body exist
-                logger.warn("No suitable text part or payload body found in email.");
+                log.warn("No suitable text part or payload body found in email.");
                 e.body = "";
               }  
             }                  
             
             Promise.resolve(process(e)).then(result => {
               if (this.markProcessed) {
-                logger.debug("Marking email as processed: " + e.id);
-                this.labelEmail(e.id, config.get('processedEmailLabel')).then((labelResult) => {
-                  logger.debug("Email marked as processed: " + e.id);
+                log.debug("Marking email as processed: " + e.id);
+                if (!LABEL_NAME) {
+                  throw "No processed email label specified.";
+                }
+                this.labelEmail(e.id, LABEL_NAME).then((labelResult) => {
+                  log.debug("Email marked as processed: " + e.id);
                   resolveMessage(e);
                 }).catch(err => {
                   rejectMessage("Failed to label email as processed: " + err);

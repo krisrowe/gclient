@@ -13,7 +13,11 @@
             "runtimeExecutable": "npm",
             "runtimeArgs": [
                 "test",
-            ]
+            ], 
+            "env": {
+                "SPREADSHEET_ID": "1LjhFvfl6M1vibU7oDEww2Dbc8rRpdT1mE_VdJtVd9t8",
+                "GOOGLE_SERVICE_ACCOUNT_KEY_FILE": "${workspaceRoot}/secrets/service-account.json"   
+            }
         },
         {
             "type": "node",
