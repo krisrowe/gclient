@@ -278,7 +278,7 @@ class Sheet {
         log.debug('Appending to sheet ' + this.name + ' as a new record with key ' + key + '.');
         row = keyValues.length + 2;
         const api = await this._api;
-        return api.spreadsheets.values.append({
+        return await api.spreadsheets.values.append({
           spreadsheetId: this.spreadsheetId,
           range: this.name + "!A" + row,
           valueInputOption: "USER_ENTERED",
@@ -287,7 +287,7 @@ class Sheet {
 
       }
       else {
-        return this.updateRange("A" + row, [values]);
+        return await this.updateRange("A" + row, [values]);
       }
   }
 
@@ -304,7 +304,7 @@ class Sheet {
   async updateRange(range, values, majorDimension = "ROWS") {
     log.debug('Updating range ' + range + ' in sheet ' + this.name + '.');
     const api = await this._api;
-    return api.spreadsheets.values.update({
+    return await api.spreadsheets.values.update({
       spreadsheetId: this.spreadsheetId,
       range: this.name + "!" + range,
       valueInputOption: "USER_ENTERED",
