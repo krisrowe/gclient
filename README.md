@@ -10,23 +10,16 @@ To install `@kdrowe/gclient`, run the following command in your NodeJS project:
 
 ```bash
 npm install @kdrowe/gclient
-
+```
 
 ## Usage
 
-### Email Batch Processd have a Batch class with operations getter.`
-// The following should have a Batch class with operations getter. 
-const batchType = require('./batch.js');
-const auth = require('@kdrowe/gclient/auth');
-auth.setUsersProvider(require("@kdrowe/gclient/local-users"));
-const user = auth.getUnitTestUser();
-const batch = batchType.initialize(user);
-const batchManager = require('@kdrowe/gclient/batch-manager');
-const result = await batchManager.runBatch(batch, user).catch(e => {
-    console.log("Failed to run batch: " + e);
-});
-console.log(result);    
-```
+1. Configure GOOGLE_SHEETS_CREDENTIALS env var in your application
+* Value should be the path to a JSON file containing credentials of a service account that has access to the Google Sheets API and access to the spreadsheet you want to interact with.
+* If GOOGLE_SHEETS_CREDENTIALS is not found, then the standard GOOGLE_APPLICATION_CREDENTIALS used by Google Client Libraries will be checked.
+* If neither of these env vars are defined, the Sheet object will fail.
+* Note that ADC is not supported.
+
 
 ## Publishing a New Revision to npm
 To publish a new revision of @kdrowe/gclient to npm for use by client applications, follow these steps:

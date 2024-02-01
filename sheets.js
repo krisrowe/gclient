@@ -40,11 +40,25 @@ class Sheet {
       auth = credentials;
     } else {
       // Use service account key file
+
+      const fs = require('fs');
+      const path = require('path');
+      
       const ENV_VAR_NAME = 'GOOGLE_APPLICATION_CREDENTIALS';
-      if (!process.env[ENV_VAR_NAME]) {
-        throw new Error(`${ENV_VAR_NAME} environment variable is required.`);
+      const RELATIVE_PATH = process.env[ENV_VAR_NAME];
+      if (!RELATIVE_PATH) {
+        throw "GOOGLE_APPLICATION_CREDENTIALS environment variable is required";
       }
-      const serviceAccount = require(process.env[ENV_VAR_NAME]);
+      const jsonPath = path.join(process.cwd(), RELATIVE_PATH);
+      
+      var jsonContent;
+      try {
+        jsonContent = fs.readFileSync(jsonPath, 'utf8');
+      } catch (err) {
+        throw new Error(`${ENV_VAR_NAME} environment variable is required, or the JSON file does not exist or is invalid.`);
+      }
+      const serviceAccount = JSON.parse(jsonContent);
+
       auth = new JWT(
         serviceAccount.client_email,
         null,

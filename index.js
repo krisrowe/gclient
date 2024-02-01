@@ -1,5 +1,4 @@
 const {google} = require('googleapis');
-const winston = require('winston');
 const {GmailManager} = require('./email.js');
 const {Sheet} = require('./sheets.js');
 
